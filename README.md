@@ -36,10 +36,10 @@ Decide on the following settings:
 
 ###### Stage one - init
 
-[] Connect with MT5 and test connections.
-[] Test pulling and console logging candle information.
-[] Test drawing boxes / lines / labeling.
-[] Test removing said boxes / lines / labeling.
+- [ ] Connect with MT5 and test connections.
+- [ ] Test pulling and console logging candle information.
+- [ ] Test drawing boxes / lines / labeling.
+- [ ] Test removing said boxes / lines / labeling.
 
 ---
 
