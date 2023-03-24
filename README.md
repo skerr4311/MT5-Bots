@@ -45,30 +45,30 @@ Decide on the following settings:
 
 ###### Stage two - functions
 
-- [ ] GetSupplyDemandZones
+- [ ] showSupplyDemandZones()
 
-- draw the supply demand zones and label them.
-- save them in an array of objects?
-- decide if they have been mitigated or not.
-- decide how far back to look?
+  - draw the supply demand zones and label them.
+  - save them in an array of objects?
+  - decide if they have been mitigated or not.
+  - decide how far back to look?
 
-- [ ] ShowKeyTimes:
+- [ ] showKeyTimes():
 
-- London open / close.
-- london Kill zone.
-- New York open / clos.
-- New York Kill zone.
-- Asia open / close.
-- Algorithm open / close.
-- draw boxes and label all zones.
+  - London open / close.
+  - london Kill zone.
+  - New York open / clos.
+  - New York Kill zone.
+  - Asia open / close.
+  - Algorithm open / close.
+  - draw boxes and label all zones.
 
-- [ ] ShowKeyAreas:
+- [ ] showKeyAreas():
 
-- BOS lines.
-- CHoCH lines.
-- Asia high / low.
-- Preveous day high / low.
-- Preveous week high / low.
+  - BOS lines.
+  - CHoCH lines.
+  - Asia high / low.
+  - Preveous day high / low.
+  - Preveous week high / low.
 
 ---
 
@@ -84,45 +84,45 @@ This GUI will allow me to:
 
 Functions needed:
 
-- [ ] isInZone:
+- [ ] isInZone():
 
-- checks to see if price is in a supply / demmand zone.
+  - checks to see if price is in a supply / demmand zone.
 
-- [ ] isLiquidityChangeOfCharacter:
+- [ ] isLiquidityChangeOfCharacter():
 
-- has one liguidity been taken?
+  - has one liguidity been taken?
+    - check the key areas.
+  - has two liquidity been taken?
+    - check the key areas.
+  - has three liquidity been taken?
+
   - check the key areas.
-- has two liquidity been taken?
-  - check the key areas.
-- has three liquidity been taken?
 
-  - check the key areas.
+- [ ] isPriceActionPattern():
 
-- [ ] isPriceActionPattern:
-
-- check the preveous candle and the current forming candle on the 5min.
-- is the first candle on of the price action candles?
-  - isPriceActionCandle() - check the candle to see if it matches doji / hammer (tweaser will need to be handled differently)
-- is the 2nd candle engulfing the first one?
+  - check the preveous candle and the current forming candle on the 5min.
+  - is the first candle on of the price action candles?
+    - isPriceActionCandle() - check the candle to see if it matches doji / hammer (tweaser will need to be handled differently)
+  - is the 2nd candle engulfing the first one?
 
 - [ ] enterTrade()
 
-- calculate stop loss using the %, the current zone low / high.
-- add the buffer ammount to the sl.
-- calculate lot size. (might need to stick to US pairs to make the calcualtion easier)
-- calculate the take proffit. key areas or opposite zone.
-- enter trade with sl and tp.
-- set inTrade = true
+  - calculate stop loss using the %, the current zone low / high.
+  - add the buffer ammount to the sl.
+  - calculate lot size. (might need to stick to US pairs to make the calcualtion easier)
+  - calculate the take proffit. key areas or opposite zone.
+  - enter trade with sl and tp.
+  - set inTrade = true
 
 - [ ] tradeMode()
 
-- while in trade:
-  - keep looking for BOS areas.
-  - move sl to the low of the BOS area + a buffer.
-  - check to make sure trade has not been closed it.
-  - if trade closed:
-    - collect information needed. % gained / % lost
-    - if % loss or gained does not breach the settings / start again.
+  - while in trade:
+    - keep looking for BOS areas.
+    - move sl to the low of the BOS area + a buffer.
+    - check to make sure trade has not been closed it.
+    - if trade closed:
+      - collect information needed. % gained / % lost
+      - if % loss or gained does not breach the settings / start again.
 
 ---
 
