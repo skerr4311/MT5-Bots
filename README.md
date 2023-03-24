@@ -45,14 +45,14 @@ Decide on the following settings:
 
 ###### Stage two - functions
 
-[] GetSupplyDemandZones
+- [ ] GetSupplyDemandZones
 
 - draw the supply demand zones and label them.
 - save them in an array of objects?
 - decide if they have been mitigated or not.
 - decide how far back to look?
 
-[] ShowKeyTimes:
+- [ ] ShowKeyTimes:
 
 - London open / close.
 - london Kill zone.
@@ -62,7 +62,7 @@ Decide on the following settings:
 - Algorithm open / close.
 - draw boxes and label all zones.
 
-[] ShowKeyAreas:
+- [ ] ShowKeyAreas:
 
 - BOS lines.
 - CHoCH lines.
@@ -83,27 +83,29 @@ This GUI will allow me to:
 ###### Stage four - work on the main automation logic.
 
 Functions needed:
-[] isInZone:
+
+- [ ] isInZone:
 
 - checks to see if price is in a supply / demmand zone.
 
-[] isLiquidityChangeOfCharacter:
+- [ ] isLiquidityChangeOfCharacter:
 
 - has one liguidity been taken?
   - check the key areas.
 - has two liquidity been taken?
   - check the key areas.
 - has three liquidity been taken?
+
   - check the key areas.
 
-[] isPriceActionPattern:
+- [ ] isPriceActionPattern:
 
 - check the preveous candle and the current forming candle on the 5min.
 - is the first candle on of the price action candles?
   - isPriceActionCandle() - check the candle to see if it matches doji / hammer (tweaser will need to be handled differently)
 - is the 2nd candle engulfing the first one?
 
-[] enterTrade()
+- [ ] enterTrade()
 
 - calculate stop loss using the %, the current zone low / high.
 - add the buffer ammount to the sl.
@@ -112,7 +114,7 @@ Functions needed:
 - enter trade with sl and tp.
 - set inTrade = true
 
-[] tradeMode()
+- [ ] tradeMode()
 
 - while in trade:
   - keep looking for BOS areas.
