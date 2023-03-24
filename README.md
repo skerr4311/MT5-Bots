@@ -38,6 +38,8 @@ Decide on the following settings:
 [] Test drawing boxes / lines / labeling.
 [] Test removing said boxes / lines / labeling.
 
+---
+
 ###### Stage two - functions
 
 [] GetSupplyDemandZones
@@ -65,11 +67,15 @@ Decide on the following settings:
 - Preveous day high / low.
 - Preveous week high / low.
 
+---
+
 ###### Stage three - create a basic GUI
 
 This GUI will allow me to:
 
 - show and hide the functions above.
+
+---
 
 ###### Stage four - work on the main automation logic.
 
@@ -113,10 +119,16 @@ Functions needed:
     - collect information needed. % gained / % lost
     - if % loss or gained does not breach the settings / start again.
 
+---
+
 ###### Stage five - Update GUI
 
 - update GUI for the automation integration.
 
+---
+
 ###### Stage six - Final stage
 
 - build application to be an executable for Mac.
+
+---
