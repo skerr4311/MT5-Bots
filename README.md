@@ -5,16 +5,19 @@ Pam is a python script that will run with MT5. The plan is to have MT5 running a
 #### Goal:
 
 Using the H1 Supply / Demand Zones
-if: price entres a zone drop down to the 15m / 5min time zone
-if: 3 liquidity rules are met look for entry.
-while: looking for entry
-if: entry pattern is met - ENTER
-Enter rules:
-tp: set to the first thing that comes up 1. asia high / low 2. oppozite zome
-sl: set to the low / high of the current order block + a buffer
 
-        while: entered:
-            do: trailstop loss - move sl to the low of every BOS + a buffer
+```
+    if: price entres a zone drop down to the 15m / 5min time zone
+    if: 3 liquidity rules are met look for entry.
+    while: looking for entry
+    if: entry pattern is met - ENTER
+    Enter rules:
+    tp: set to the first thing that comes up 1. asia high / low 2. oppozite zome
+    sl: set to the low / high of the current order block + a buffer
+
+    while: entered:
+        do: trailstop loss - move sl to the low of every BOS + a buffer
+```
 
 ---
 
