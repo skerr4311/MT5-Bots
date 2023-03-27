@@ -1,0 +1,13 @@
+name: SyncExternalToS3
+
+# Only sync on execution from nww repo push to production branch.
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggering external sync logic"
+      - name: Checkout
+        uses: actions/checkout@v2
