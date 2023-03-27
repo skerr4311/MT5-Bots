@@ -2,7 +2,7 @@ name: SyncExternalToS3
 
 # Only sync on execution from nww repo push to production branch.
 on:
-  workflow_dispatch:
+  repository_dispatch:
 
 jobs:
   cypress-run:
