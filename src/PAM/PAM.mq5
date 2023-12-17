@@ -4,8 +4,9 @@
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 //--- input parameters
-input int      par1=1;
-input int      par2=2;
+input int par1=1;
+input int par2=2;
+input string EAName = "Price Action Mitigation";
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -15,6 +16,8 @@ int OnInit()
    EventSetTimer(60);
    
 //---
+   // Print a message to the console on initialization
+   Print(EAName + " initialized successfully!");
    return(INIT_SUCCEEDED);
   }
 //+------------------------------------------------------------------+
@@ -32,6 +35,8 @@ void OnDeinit(const int reason)
 void OnTick()
   {
 //---
+   // Print a message to the console on every tick
+   Print(EAName + " is running on tick " + IntegerToString(GetTickCount()));
    
   }
 //+------------------------------------------------------------------+
