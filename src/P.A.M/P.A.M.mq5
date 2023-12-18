@@ -20,11 +20,15 @@ input int lookBack = 5; // Number of bars to look back to identify the highs and
 //+------------------------------------------------------------------+
 MqlTick currentTick;
 CTrade trade;
-datetime openTimeBuy = 0;
-datetime openTimeSell = 0;
 double highPrices[];
 double lowPrices[];
 datetime barTimes[];
+double highestHigh = 0, lowestLow = 0;
+double lastHigh = 0, lastLow = 0;
+enum TrendDirection { TREND_UP, TREND_DOWN, TREND_NONE };
+TrendDirection currentTrend = TREND_NONE;
+string EA_Name = "P.A.M";
+
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -58,50 +62,77 @@ void OnDeinit(const int reason) {
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
-void OnTick() {   
-   // Copy the high and low prices of the last 'lookBack + 1' bars
-   if(CopyHigh(_Symbol, _Period, 0, lookBack + 1, highPrices) <= 0)
-     {
-      Print("Failed to copy high prices: ", GetLastError());
-      return;
-     }
+void OnTick() {  
+   IdentifyMarketStructure(); 
+   MessageScreen();
+}
 
-   if(CopyLow(_Symbol, _Period, 0, lookBack + 1, lowPrices) <= 0)
-     {
-      Print("Failed to copy low prices: ", GetLastError());
-      return;
-     }
+//+------------------------------------------------------------------+
+//| Function to display information                                  |
+//+------------------------------------------------------------------+
+void MessageScreen(){
+   Comment(EA_Name, "\nTrend: ", currentTrend, 
+            "\nhighestHigh: ", (string)highestHigh,
+            "\nlowestLow: ", (string)lowestLow);
+}
 
-   // Get the bar index of the highest high and lowest low in the lookback period
-   int highestIndex = ArrayMaximum(highPrices, 0, lookBack);
-   int lowestIndex = ArrayMinimum(lowPrices, 0, lookBack);
+//+------------------------------------------------------------------+
+//| Function to Update Highs and Lows                                |
+//+------------------------------------------------------------------+
+void UpdateHighsLows() {
+    highestHigh = iHigh(Symbol(), 0, iHighest(Symbol(), 0, MODE_HIGH, lookBack, 1));
+    lowestLow = iLow(Symbol(), 0, iLowest(Symbol(), 0, MODE_LOW, lookBack, 1));
+}
 
-   // Determine the highest high and lowest low values
-   double lastHigh = highPrices[highestIndex];
-   double lastLow = lowPrices[lowestIndex];
+//+------------------------------------------------------------------+
+//| Function to Identify Market Structure                            |
+//+------------------------------------------------------------------+
+void IdentifyMarketStructure() {
+    UpdateHighsLows();
+    double currentHigh = iHigh(Symbol(), 0, 1);
+    double currentLow = iLow(Symbol(), 0, 1);
 
-   // Detect Higher High (HH)
-   if(lastHigh > highPrices[ArrayMaximum(highPrices, 1, lookBack)]) {
-      DrawLabel("HH", lastHigh);
-   }
+    // Logic to identify Higher High, Higher Low, Lower Low, Lower High
+    if (currentHigh > highestHigh) {
+        // Possible Higher High
+        if (currentTrend != TREND_UP) {
+            currentTrend = TREND_UP;
+            lastHigh = currentHigh;
+            lastLow = 0;
+            DrawLabel("HH", currentHigh); // Label the Higher High
+        } else if (currentLow > lastLow) {
+            lastLow = currentLow; // Update last low
+            DrawLabel("HL", currentLow); // Label the Higher Low
+        }
+    }
+    if (currentLow < lowestLow) {
+        // Possible Lower Low
+        if (currentTrend != TREND_DOWN) {
+            currentTrend = TREND_DOWN;
+            lastLow = currentLow;
+            lastHigh = 0;
+            DrawLabel("LL", currentLow); // Label the Lower Low
+        } else if (currentHigh < lastHigh) {
+            lastHigh = currentHigh; // Update last high
+            DrawLabel("LH", currentHigh); // Label the Lower High
+        }
+    }
 
-   // Detect Higher Low (HL)
-   if(lastLow > lowPrices[ArrayMinimum(lowPrices, 1, lookBack)]) {
-      DrawLabel("HL", lastLow);
-   }
+    // Update last highs and lows
+    if (currentHigh > lastHigh) lastHigh = currentHigh;
+    if (currentLow < lastLow) lastLow = currentLow;
+}
 
-   // Detect Lower High (LH)
-   if(lastHigh < highPrices[ArrayMaximum(highPrices, 1, lookBack)]) {
-      DrawLabel("LH", lastHigh);
-   }
-
-   // Detect Lower Low (LL)
-   if(lastLow < lowPrices[ArrayMinimum(lowPrices, 1, lookBack)]) {
-      DrawLabel("LL", lastLow);
-   }
-
-   //--- Update graphical objects if necessary
-
+//+------------------------------------------------------------------+
+//| Draw BOS function                                                |
+//+------------------------------------------------------------------+
+void DrawBOSLine(double price, string strColor) {
+    string lineName = "BOS_" + DoubleToString(price, _Digits);
+    if(!ObjectCreate(0, lineName, OBJ_HLINE, 0, 0, price)) {
+        Print("Error creating BOS line: ", GetLastError());
+    } else {
+        ObjectSetInteger(0, lineName, OBJPROP_COLOR, StringToColor(strColor));
+    }
 }
 
 //+------------------------------------------------------------------+
