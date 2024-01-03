@@ -8,6 +8,7 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "iFunctions.mqh"
+#include "ZoneClass.mqh"
 
 //+------------------------------------------------------------------+
 //| Trend Class                                                      |
@@ -34,6 +35,7 @@ private:
     TrendDirection currentTrend;
     ENUM_TIMEFRAMES trendTimeframe;
     int lookbackValue;
+    ZoneClass zoneClass;
     
 public:
     // Constructor
@@ -54,6 +56,7 @@ public:
        currentTrend = TREND_NONE;
        trendTimeframe = timeframe;
        lookbackValue = lookback;
+       zoneClass.init(timeframe);
     }
     
    //+------------------------------------------------------------------+
@@ -66,7 +69,7 @@ public:
       for(int i = lookbackValue; i >= 1; i--) {
          IdentifyMarketStructure(i);
          handleChangeOfCharecter(i);
-         CheckAndDeleteZones(i);
+         zoneClass.CheckAndDeleteZones(i);
       }
    }
    
@@ -86,7 +89,7 @@ public:
                // set HH; This is also a BOS
                int newHigherHighIndex;
                double newHigherHigh;
-               DrawKeyStructurePoint(KEY_STRUCTURE_HH, candleId, newHigherHighIndex, newHigherHigh);
+               this.DrawKeyStructurePoint(KEY_STRUCTURE_HH, candleId, newHigherHighIndex, newHigherHigh);
                prevHH = newHigherHigh;
                int newHigherLowIndex = candleId;
                double newHigherLow = getLow(trendTimeframe, newHigherLowIndex);
@@ -221,8 +224,7 @@ public:
                   high = getHigh(trendTimeframe, bullId - 1);
                }
                // complete high once i know this is working
-               InsertZoneObject(bullId, high, low, trendTimeframe, TREND_DOWN);
-               zoneCount++;
+               zoneClass.InsertZoneObject(bullId, high, low, clrGreen);
             }
          } else if (currentTrend == TREND_UP) {
             if(currentHigh > prevHH) {
@@ -243,42 +245,9 @@ public:
                   low = getLow(trendTimeframe, bearId - 1);
                }
                // complete high once i know this is working
-               InsertZoneObject(bearId, high, low, trendTimeframe, TREND_UP);
-               zoneCount++;
+               zoneClass.InsertZoneObject(bearId, high, low, clrRed);
             }
          }
-      }
-      
-      //+------------------------------------------------------------------+
-      //| Delete Zone if 50% mitigated                                     |
-      //+------------------------------------------------------------------+
-      void CheckAndDeleteZones(int candleId) {
-          double currentPrice = getClose(trendTimeframe, candleId);
-          ZoneInfo updatedZones[];
-          bool isUdateNeeded = false;
-      
-          for (int i = ArraySize(zones) - 1; i >= 0; i--) {
-              double midPrice = (zones[i].top + zones[i].bottom) / 2;
-              if ((currentPrice > midPrice && currentPrice < zones[i].top) || 
-                  (currentPrice < midPrice && currentPrice > zones[i].bottom)) {
-                  // Price has penetrated more than 50% into the rectangle
-                  if(isZoneVisible) {
-                     ObjectDelete(0, zones[i].name);
-                  }
-                  isUdateNeeded = true;
-              } else {
-                  ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
-                  updatedZones[ArraySize(updatedZones) - 1] = zones[i];
-              }
-          }
-          
-          if(isUdateNeeded) {
-            // Replace zones with updatedZones
-             ArrayResize(zones, ArraySize(updatedZones));
-             for (int i = 0; i < ArraySize(updatedZones); i++) {
-                 zones[i] = updatedZones[i];
-             }
-          }
       }
       
       //+------------------------------------------------------------------+

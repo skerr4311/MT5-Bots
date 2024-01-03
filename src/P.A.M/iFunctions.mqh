@@ -42,3 +42,16 @@ double getOpen(ENUM_TIMEFRAMES timeframe, int candleId) {
 double getClose(ENUM_TIMEFRAMES timeframe, int candleId) {
    return iClose(Symbol(), timeframe, candleId);
 }
+
+//+------------------------------------------------------------------+
+//| Delete EA Objects                                                |
+//+------------------------------------------------------------------+
+void DeleteEAObjects(string prefix) {
+    int totalObjects = ObjectsTotal(0);
+    for(int i = totalObjects - 1; i >= 0; i--) {
+        string name = ObjectName(0, i);
+        if(StringFind(name, prefix) == 0) { // Check if the name starts with the prefix
+            ObjectDelete(0, name);
+        }
+    }
+}
