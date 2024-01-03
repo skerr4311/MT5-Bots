@@ -28,6 +28,7 @@ private:
     ENUM_TIMEFRAMES trendTimeframe;
     int lookbackValue;
     ZoneClass zoneClass;
+    ArrowClass arrowClass;
     
 public:
     // Constructor
@@ -49,6 +50,7 @@ public:
        trendTimeframe = timeframe;
        lookbackValue = lookback;
        zoneClass.init(timeframe);
+       arrowClass.init(timeframe);
     }
     
    //+------------------------------------------------------------------+
@@ -167,7 +169,8 @@ public:
             if(currentHigh > prevLH) {
                // confirmed choch
                double currentLow = getLow(trendTimeframe, candleId);
-               InsertArrowObject(candleId, trendTimeframe, TREND_UP);
+               arrowClass.InsertArrowObject(candleId, TREND_UP);
+               currentTrend = TREND_UP;
                highestHigh = currentHigh;
                prevHH = currentHigh;
                highestLow = currentLow;
@@ -181,7 +184,8 @@ public:
             if(currentLow < prevHL) {
                // confirmed choch
                double currentHigh = getHigh(trendTimeframe, candleId);
-               InsertArrowObject(candleId, trendTimeframe, TREND_DOWN);
+               arrowClass.InsertArrowObject(candleId, TREND_DOWN);
+               currentTrend = TREND_DOWN;
                lowestLow = currentLow;
                prevLL = currentLow;
                lowestHigh = currentHigh;
