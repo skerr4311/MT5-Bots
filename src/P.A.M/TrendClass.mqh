@@ -14,7 +14,7 @@
 //+------------------------------------------------------------------+
 
 // BasicClass.mqh
-class BasicClass {
+class TrendClass {
 private:
     datetime marketStructureExecutionTime;
     double highestHigh, highestLow, lowestLow, lowestHigh;
@@ -37,7 +37,8 @@ private:
     
 public:
     // Constructor
-    BasicClass(int lookback, ENUM_TIMEFRAMES timeframe) {
+    TrendClass(int lookback, ENUM_TIMEFRAMES timeframe) {
+       marketStructureExecutionTime = getTime(timeframe, 0);
        highestHigh = 0;
        highestLow = 0;
        lowestLow = 0;
@@ -85,7 +86,7 @@ public:
                // set HH; This is also a BOS
                int newHigherHighIndex;
                double newHigherHigh;
-               DrawKeyStructurePoint(KEY_STRUCTURE_HH, trendTimeframe, candleId, newHigherHighIndex, newHigherHigh);
+               DrawKeyStructurePoint(KEY_STRUCTURE_HH, candleId, newHigherHighIndex, newHigherHigh);
                prevHH = newHigherHigh;
                int newHigherLowIndex = candleId;
                double newHigherLow = getLow(trendTimeframe, newHigherLowIndex);
@@ -101,7 +102,7 @@ public:
                InsertTrendObject("HL", newHigherLow, newHigherLowIndex, trendTimeframe);
                prevHL = newHigherLow;
                isHigherHighReverseStarted = false;
-               handleBreakOfStructure(candleId, trendTimeframe);
+               handleBreakOfStructure(candleId);
             }
             indexHH = 0;
          } else if (currentHigh < highestHigh) {
@@ -119,7 +120,7 @@ public:
                // set LL, this is also a BOS
                int newLowerLowIndex;
                double newLowerLow;
-               DrawKeyStructurePoint(KEY_STRUCTURE_LL, trendTimeframe, candleId, newLowerLowIndex, newLowerLow);
+               DrawKeyStructurePoint(KEY_STRUCTURE_LL, candleId, newLowerLowIndex, newLowerLow);
                prevLL = newLowerLow;
                int newLowerHighIndex = candleId;
                double newLowerHigh = getHigh(trendTimeframe, newLowerHighIndex);
@@ -135,7 +136,7 @@ public:
                InsertTrendObject("LH", newLowerHigh, newLowerHighIndex, trendTimeframe);
                prevLH = newLowerHigh;
                isLowerLowReveseStarted = false;
-               handleBreakOfStructure(candleId, trendTimeframe);
+               handleBreakOfStructure(candleId);
             }
             indexLL = 0;
          } else if (currentHigh > lowestHigh) {
@@ -196,6 +197,59 @@ public:
       }
       
       //+------------------------------------------------------------------+
+      //| Check for BOS                                                    |
+      //+------------------------------------------------------------------+
+      void handleBreakOfStructure(int candleId) {
+         double currentLow = getLow(trendTimeframe, candleId);
+         double currentHigh = getHigh(trendTimeframe, candleId);
+         if(currentTrend == TREND_DOWN) {
+            if(currentLow < prevLL) {
+               // Create a supply zone
+               // scan back and find the first bull candle:
+               int bullId = 0;
+               for(int i = candleId + 1; bullId == 0; i++) {
+                  double previousOpen = getOpen(trendTimeframe, i);
+                  double previousClose = getClose(trendTimeframe, i);
+                  if(previousClose > previousOpen) {
+                     bullId = i;
+                  }
+               }
+               
+               double low = getLow(trendTimeframe, bullId);
+               double high = getHigh(trendTimeframe, bullId);
+               if(getHigh(trendTimeframe, bullId - 1) > high) {
+                  high = getHigh(trendTimeframe, bullId - 1);
+               }
+               // complete high once i know this is working
+               InsertZoneObject(bullId, high, low, trendTimeframe, TREND_DOWN);
+               zoneCount++;
+            }
+         } else if (currentTrend == TREND_UP) {
+            if(currentHigh > prevHH) {
+               // Create a demand zone
+               // scan back and find the first bear candle:
+               int bearId = 0;
+               for(int i = candleId + 1; bearId == 0; i++) {
+                  double previousOpen = getOpen(trendTimeframe, i);
+                  double previousClose = getClose(trendTimeframe, i);
+                  if(previousClose < previousOpen) {
+                     bearId = i;
+                  }
+               }
+               
+               double high = getHigh(trendTimeframe, bearId);
+               double low = getLow(trendTimeframe, bearId);
+               if(getLow(trendTimeframe, bearId - 1) < low) {
+                  low = getLow(trendTimeframe, bearId - 1);
+               }
+               // complete high once i know this is working
+               InsertZoneObject(bearId, high, low, trendTimeframe, TREND_UP);
+               zoneCount++;
+            }
+         }
+      }
+      
+      //+------------------------------------------------------------------+
       //| Delete Zone if 50% mitigated                                     |
       //+------------------------------------------------------------------+
       void CheckAndDeleteZones(int candleId) {
@@ -225,6 +279,31 @@ public:
                  zones[i] = updatedZones[i];
              }
           }
+      }
+      
+      //+------------------------------------------------------------------+
+      //| Draw key structure point                                         |
+      //+------------------------------------------------------------------+
+      bool DrawKeyStructurePoint(KeyStructureType type, int candleId, int &index, double &price) {
+         string label;
+          switch(type) {
+              case KEY_STRUCTURE_HH:
+                  label = "HH";
+                  index = candleId + indexHH + 1;
+                  price = getHigh(trendTimeframe, index);
+                  break;
+      
+              case KEY_STRUCTURE_LL:
+                  label = "LL";
+                  index = candleId + indexLL + 1;
+                  price = getLow(trendTimeframe, index);
+                  break;
+      
+              default:
+                  Print("Invalid type");
+          }
+          InsertTrendObject(label, price, index, trendTimeframe);
+          return true;
       }
 
     
