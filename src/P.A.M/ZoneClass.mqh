@@ -8,9 +8,10 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "iFunctions.mqh"
+#include "CommonGlobals.mqh"
 
 //+------------------------------------------------------------------+
-//| Trend Class                                                      |
+//| Zone Class                                                       |
 //+------------------------------------------------------------------+
 
 class ZoneClass {
@@ -21,8 +22,7 @@ private:
       string name;
       double top;
       double bottom;
-      color zoneColor;
-      ENUM_TIMEFRAMES timeframe;
+      TrendDirection trend;
       datetime startTime;
    };
    ZoneInfo zones[];
@@ -43,13 +43,12 @@ public:
    //+------------------------------------------------------------------+
    //| Add zone info                                                    |
    //+------------------------------------------------------------------+
-   void AddZoneInfo(string name, double top, double bottom, color zoneColor, datetime startTime) {
+   void AddZoneInfo(string name, double top, double bottom, TrendDirection trend, datetime startTime) {
        ZoneInfo info;
        info.name = name;
        info.top = top;
        info.bottom = bottom;
-       info.zoneColor = zoneColor;
-       info.timeframe = zoneTimeframe;
+       info.trend = trend;
        info.startTime = startTime;
        ArrayResize(zones, ArraySize(zones) + 1);
        zones[ArraySize(zones) - 1] = info;
@@ -78,21 +77,26 @@ public:
    //+------------------------------------------------------------------+
    //| Insert new zone                                                  |
    //+------------------------------------------------------------------+
-   void InsertZoneObject(int startCandleIndex, double priceTop, double priceBottom, color zoneColor) {
+   void InsertZoneObject(int startCandleIndex, double priceTop, double priceBottom, TrendDirection trend) {
        datetime startTime = getTime(zoneTimeframe, startCandleIndex);
        string rectName = "PAM_zone" + (string)zoneCount;
        zoneCount++;
-       this.AddZoneInfo(rectName, priceTop, priceBottom, zoneColor, startTime);
+       this.AddZoneInfo(rectName, priceTop, priceBottom, trend, startTime);
        if(isZoneVisible){
-         this.DrawZone(startTime, rectName, priceTop, priceBottom, zoneColor);
+         this.DrawZone(startTime, rectName, priceTop, priceBottom, trend);
        }
    }
    
    //+------------------------------------------------------------------+
    //| Draw new zone                                                    |
    //+------------------------------------------------------------------+
-   void DrawZone(datetime startTime, string zoneName, double priceTop, double priceBottom, color zoneColor) {
+   void DrawZone(datetime startTime, string zoneName, double priceTop, double priceBottom, TrendDirection trend) {
        datetime endTime = getTime(zoneTimeframe, 0); // Current time
+       color zoneColor = clrRed;
+ 
+       if (trend == TREND_UP) {
+         zoneColor = clrGreen;
+       }
    
         // Create the rectangle if it doesn't exist
         if(!ObjectCreate(0, zoneName, OBJ_RECTANGLE, 0, startTime, priceTop, endTime, priceBottom)) {
@@ -115,7 +119,7 @@ public:
    void DrawAllZones() {
       for (int i = 0; i < ArraySize(zones); i++) {
          ZoneInfo zone = zones[i];
-         this.DrawZone(zone.startTime, zone.name, zone.top, zone.bottom, zone.zoneColor);
+         this.DrawZone(zone.startTime, zone.name, zone.top, zone.bottom, zone.trend);
       }
    }
    

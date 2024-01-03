@@ -9,6 +9,8 @@
 //+------------------------------------------------------------------+
 #include "iFunctions.mqh"
 #include "ZoneClass.mqh"
+#include "ArrowClass.mqh"
+#include "CommonGlobals.mqh"
 
 //+------------------------------------------------------------------+
 //| Trend Class                                                      |
@@ -22,16 +24,6 @@ private:
     double prevLL, prevLH, prevHH, prevHL;
     bool isLowerLowReveseStarted, isHigherHighReverseStarted;
     int indexLL, indexHH;
-    enum TrendDirection
-      {
-       TREND_NONE,
-       TREND_UP,
-       TREND_DOWN
-      };
-    enum KeyStructureType {
-       KEY_STRUCTURE_HH,
-       KEY_STRUCTURE_LL
-    };
     TrendDirection currentTrend;
     ENUM_TIMEFRAMES trendTimeframe;
     int lookbackValue;
@@ -67,8 +59,8 @@ public:
       lowestLow = getLow(trendTimeframe, lookbackValue + 1);
    
       for(int i = lookbackValue; i >= 1; i--) {
-         IdentifyMarketStructure(i);
-         handleChangeOfCharecter(i);
+         this.IdentifyMarketStructure(i);
+         this.handleChangeOfCharecter(i);
          zoneClass.CheckAndDeleteZones(i);
       }
    }
@@ -224,7 +216,7 @@ public:
                   high = getHigh(trendTimeframe, bullId - 1);
                }
                // complete high once i know this is working
-               zoneClass.InsertZoneObject(bullId, high, low, clrGreen);
+               zoneClass.InsertZoneObject(bullId, high, low, currentTrend);
             }
          } else if (currentTrend == TREND_UP) {
             if(currentHigh > prevHH) {
@@ -245,7 +237,7 @@ public:
                   low = getLow(trendTimeframe, bearId - 1);
                }
                // complete high once i know this is working
-               zoneClass.InsertZoneObject(bearId, high, low, clrRed);
+               zoneClass.InsertZoneObject(bearId, high, low, currentTrend);
             }
          }
       }
