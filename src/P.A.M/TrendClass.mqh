@@ -11,6 +11,7 @@
 #include "ZoneClass.mqh"
 #include "ArrowClass.mqh"
 #include "CommonGlobals.mqh"
+#include "HighsAndLowsClass.mqh"
 
 //+------------------------------------------------------------------+
 //| Trend Class                                                      |
@@ -29,6 +30,7 @@ private:
     int lookbackValue;
     ZoneClass zoneClass;
     ArrowClass arrowClass;
+    HighsAndLowsClass highsAndLowsClass;
     
 public:
     // Constructor
@@ -51,6 +53,7 @@ public:
        lookbackValue = lookback;
        zoneClass.init(timeframe);
        arrowClass.init(timeframe);
+       highsAndLowsClass.init(timeframe);
     }
     
    //+------------------------------------------------------------------+
@@ -64,6 +67,28 @@ public:
          this.IdentifyMarketStructure(i);
          this.handleChangeOfCharecter(i);
          zoneClass.CheckAndDeleteZones(i);
+      }
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Handle Trend Function                                            |
+   //+------------------------------------------------------------------+ 
+   void HandleTrend() {
+      OnTimeTick(0);
+      handleChangeOfCharecter(0);
+      zoneClass.CheckAndDeleteZones(0);
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Functions to run once a bar is complete                          |
+   //+------------------------------------------------------------------+
+   void OnTimeTick(int candleId){
+      datetime prevCandletime = getTime(trendTimeframe, 1);
+      
+      if (prevCandletime != marketStructureExecutionTime) {
+         marketStructureExecutionTime = prevCandletime;
+         IdentifyMarketStructure(1);
+         zoneClass.UpdateZoneEndDates();
       }
    }
    
@@ -96,7 +121,7 @@ public:
                   }
                }
                
-               InsertTrendObject("HL", newHigherLow, newHigherLowIndex, trendTimeframe);
+               highsAndLowsClass.InsertTrendObject("HL", newHigherLow, newHigherLowIndex);
                prevHL = newHigherLow;
                isHigherHighReverseStarted = false;
                handleBreakOfStructure(candleId);
@@ -130,7 +155,7 @@ public:
                   }
                }
                
-               InsertTrendObject("LH", newLowerHigh, newLowerHighIndex, trendTimeframe);
+               highsAndLowsClass.InsertTrendObject("LH", newLowerHigh, newLowerHighIndex);
                prevLH = newLowerHigh;
                isLowerLowReveseStarted = false;
                handleBreakOfStructure(candleId);
@@ -267,10 +292,15 @@ public:
               default:
                   Print("Invalid type");
           }
-          InsertTrendObject(label, price, index, trendTimeframe);
+          highsAndLowsClass.InsertTrendObject(label, price, index);
           return true;
       }
 
-    
+      //+------------------------------------------------------------------+
+      //| Get current trend                                                |
+      //+------------------------------------------------------------------+
+      TrendDirection getTrend() {
+         return this.currentTrend;
+      }
     
 };
