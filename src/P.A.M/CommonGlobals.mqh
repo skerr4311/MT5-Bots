@@ -18,3 +18,16 @@ enum KeyStructureType {
     KEY_STRUCTURE_HH,
     KEY_STRUCTURE_LL
 };
+//+------------------------------------------------------------------+
+//| EnumToString function for TrendDirection enum                    |
+//+------------------------------------------------------------------+
+string EnumToString(TrendDirection trend) {
+    switch(trend) {
+        case TREND_UP:
+            return "Up";
+        case TREND_DOWN:
+            return "Down";
+        default:
+            return "None";
+    }
+}
