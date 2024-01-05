@@ -7,7 +7,6 @@
 //+------------------------------------------------------------------+
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
-#include "iFunctions.mqh"
 #include "CommonGlobals.mqh"
 
 //+------------------------------------------------------------------+
@@ -17,6 +16,7 @@
 class ZoneClass {
 private:
    ENUM_TIMEFRAMES zoneTimeframe;
+   bool isZoneVisible;
    int zoneCount;
    struct ZoneInfo {
       string name;
@@ -35,9 +35,10 @@ public:
    //+------------------------------------------------------------------+
    //| set timeframe                                                    |
    //+------------------------------------------------------------------+
-   void init(ENUM_TIMEFRAMES timeframe) {
+   void init(ENUM_TIMEFRAMES timeframe, bool isVisible) {
       zoneCount = 0;
       zoneTimeframe = timeframe;
+      isZoneVisible = isVisible;
    }
     
    //+------------------------------------------------------------------+
@@ -83,34 +84,8 @@ public:
        zoneCount++;
        this.AddZoneInfo(rectName, priceTop, priceBottom, trend, startTime);
        if(isZoneVisible){
-         this.DrawZone(startTime, rectName, priceTop, priceBottom, trend);
+         DrawZone(startTime, rectName, priceTop, priceBottom, trend, zoneTimeframe);
        }
-   }
-   
-   //+------------------------------------------------------------------+
-   //| Draw new zone                                                    |
-   //+------------------------------------------------------------------+
-   void DrawZone(datetime startTime, string zoneName, double priceTop, double priceBottom, TrendDirection trend) {
-       datetime endTime = getTime(zoneTimeframe, 0); // Current time
-       color zoneColor = clrRed;
- 
-       if (trend == TREND_UP) {
-         zoneColor = clrGreen;
-       }
-   
-        // Create the rectangle if it doesn't exist
-        if(!ObjectCreate(0, zoneName, OBJ_RECTANGLE, 0, startTime, priceTop, endTime, priceBottom)) {
-            Print("Failed to create rectangle: ", GetLastError());
-            return;
-        }
-   
-        // Set properties of the rectangle (color, style, etc.)
-        ObjectSetInteger(0, zoneName, OBJPROP_STYLE, STYLE_SOLID);
-        ObjectSetInteger(0, zoneName, OBJPROP_COLOR, zoneColor);
-        ObjectSetInteger(0, zoneName, OBJPROP_FILL, true);
-        ObjectSetInteger(0, zoneName, OBJPROP_BACK, false); // Set to false if you don't want it in the background
-        ObjectSetInteger(0, zoneName, OBJPROP_SELECTABLE, false);
-        ObjectSetInteger(0, zoneName, OBJPROP_SELECTED, false);
    }
    
    //+------------------------------------------------------------------+
@@ -119,7 +94,7 @@ public:
    void DrawAllZones() {
       for (int i = 0; i < ArraySize(zones); i++) {
          ZoneInfo zone = zones[i];
-         this.DrawZone(zone.startTime, zone.name, zone.top, zone.bottom, zone.trend);
+         DrawZone(zone.startTime, zone.name, zone.top, zone.bottom, zone.trend, zoneTimeframe);
       }
    }
    
@@ -153,5 +128,13 @@ public:
               zones[i] = updatedZones[i];
           }
        }
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Toggle Zone                                                      |
+   //+------------------------------------------------------------------+
+   bool ToggleIsVisible() {
+       isZoneVisible = !isZoneVisible;
+       return isZoneVisible;
    }
 };

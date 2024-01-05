@@ -5,18 +5,13 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Inclue                                                           |
-//+------------------------------------------------------------------+
-#include "iFunctions.mqh"
-#include "CommonGlobals.mqh"
-
-//+------------------------------------------------------------------+
-//| HighsAndLowsClass                                                       |
+//| HighsAndLowsClass                                                |
 //+------------------------------------------------------------------+
 
 class HighsAndLowsClass {
 private:
    ENUM_TIMEFRAMES highsandlowsTimeframe;
+   bool isTrendVisible;
    int trendCount;
    struct TrendInfo {
       string name; 
@@ -34,9 +29,10 @@ public:
    //+------------------------------------------------------------------+
    //| init class                                                       |
    //+------------------------------------------------------------------+
-   void init(ENUM_TIMEFRAMES timeframe) {
+   void init(ENUM_TIMEFRAMES timeframe, bool isVisible) {
       trendCount = 0;
       highsandlowsTimeframe = timeframe;
+      isTrendVisible = isVisible;
    }
    
    //+------------------------------------------------------------------+
@@ -47,23 +43,6 @@ public:
          TrendInfo trend = trends[i];
          DrawLabel(trend.name, trend.label, trend.price, trend.time);
       }
-   }
-   
-   //+------------------------------------------------------------------+
-   //| Draw new trend                                                   |
-   //+------------------------------------------------------------------+
-   void DrawLabel(string name, string label, double price, datetime time) {
-      if(!ObjectCreate(0, name, OBJ_TEXT, 0, time, price)) {
-         Print("Failed to create rectangle: ", GetLastError());
-         return;
-      }
-      
-      // Set the properties for the label
-      ObjectSetString(0, name, OBJPROP_TEXT, label);
-      ObjectSetInteger(0, name, OBJPROP_FONTSIZE, 9);
-      ObjectSetInteger(0, name, OBJPROP_COLOR, clrWhite);
-      ObjectSetInteger(0, name, OBJPROP_SELECTABLE, 0); // Make it non-selectable
-      ObjectSetInteger(0, name, OBJPROP_SELECTED, 0); // Unselect it
    }
    
    //+------------------------------------------------------------------+
@@ -90,6 +69,14 @@ public:
        if(isTrendVisible){
          DrawLabel(objectName, label, price, time);
        }
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Toggle Trend                                                     |
+   //+------------------------------------------------------------------+
+   bool ToggleIsVisible() {
+       isTrendVisible = !isTrendVisible;
+       return isTrendVisible;
    }
     
 };

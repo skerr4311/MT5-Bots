@@ -5,18 +5,13 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Inclue                                                           |
-//+------------------------------------------------------------------+
-#include "iFunctions.mqh"
-#include "CommonGlobals.mqh"
-
-//+------------------------------------------------------------------+
 //| ArrowClass                                                       |
 //+------------------------------------------------------------------+
 
 class ArrowClass {
 private:
    ENUM_TIMEFRAMES arrowTimeframe;
+   bool isArrowVisible;
    int arrowCount;
    struct ArrowInfo {
       datetime time;
@@ -34,30 +29,10 @@ public:
    //+------------------------------------------------------------------+
    //| init class                                                       |
    //+------------------------------------------------------------------+
-   void init(ENUM_TIMEFRAMES timeframe) {
+   void init(ENUM_TIMEFRAMES timeframe, bool isVisible) {
       arrowCount = 0;
       arrowTimeframe = timeframe;
-   }
-   
-   //+------------------------------------------------------------------+
-   //| Draw Trend arrow                                                 |
-   //+------------------------------------------------------------------+
-   void DrawTrendArrow(datetime time, string name, double price, TrendDirection trend) {
-      ENUM_OBJECT arrow = trend == TREND_UP ? OBJ_ARROW_UP : OBJ_ARROW_DOWN;
-      color arrowColor = trend == TREND_UP ? clrGreenYellow : clrDeepPink;
-      long anchor = trend == TREND_UP ? ANCHOR_TOP : ANCHOR_BOTTOM;
-      
-      if(!ObjectCreate(0, name, arrow, 0, time, price)) {
-        Print("Failed to create up arrow: ", GetLastError());
-        return;
-       }
-   
-       // Set properties of the arrow
-       ObjectSetInteger(0, name, OBJPROP_COLOR, arrowColor);
-       ObjectSetInteger(0, name, OBJPROP_WIDTH, 2); // Adjust width for size
-       ObjectSetInteger(0, name, OBJPROP_ANCHOR, anchor);
-       ObjectSetInteger(0, name, OBJPROP_SELECTABLE, true);
-       ObjectSetInteger(0, name, OBJPROP_SELECTED, false);
+      isArrowVisible = isVisible;
    }
    
    //+------------------------------------------------------------------+
@@ -96,6 +71,14 @@ public:
        if(isArrowVisible){
          DrawTrendArrow(time, objectName, price, trend);
        }
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Toggle Arrow                                                     |
+   //+------------------------------------------------------------------+
+   bool ToggleIsVisible() {
+       isArrowVisible = !isArrowVisible;
+       return isArrowVisible;
    }
     
 };
