@@ -179,7 +179,7 @@ void UpdateEMA(int candleId, ENUM_TIMEFRAMES timeframe, int period) {
   double startEma = GetEMAForBar(candleId + 1, timeframe, period);
   double endEma = GetEMAForBar(candleId, timeframe, period);
   
-  string lineName = "PAM_EMA" + (string)period + "_" + (string)endTime;
+  string lineName = "PAM_EMA_" + IntegerToString(timeframe) + (string)period + "_" + (string)endTime;
   if (ObjectFind(0, lineName) == -1) {
       ObjectCreate(0, lineName, OBJ_TREND, 0, endTime, endEma, startTime, startEma);
       ObjectSetInteger(0, lineName, OBJPROP_COLOR, clrDodgerBlue);

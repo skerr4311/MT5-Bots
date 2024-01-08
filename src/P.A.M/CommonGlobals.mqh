@@ -4,6 +4,9 @@
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 
+input ENUM_TIMEFRAMES inputTrendTimeframe = PERIOD_H1; // Trend timeframe
+input ENUM_TIMEFRAMES inputExecutionTimeframe = PERIOD_M15; // Execution timeframe
+
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
 //+------------------------------------------------------------------+

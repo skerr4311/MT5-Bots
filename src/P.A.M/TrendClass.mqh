@@ -36,7 +36,13 @@ private:
     
 public:
     // Constructor
-    TrendClass(int lookback, ENUM_TIMEFRAMES timeframe) {
+    TrendClass() {
+    }
+    
+   //+------------------------------------------------------------------+
+   //| Get Market trend                                                 |
+   //+------------------------------------------------------------------+
+   void init(int lookback, ENUM_TIMEFRAMES timeframe) {
        marketStructureExecutionTime = getTime(timeframe, 0);
        highestHigh = 0;
        highestLow = 0;
@@ -53,21 +59,27 @@ public:
        currentTrend = TREND_NONE;
        trendTimeframe = timeframe;
        lookbackValue = lookback;
-       emaButtonRectName = "PAM_ToggleEMARect";
-       emaButtonTextName = "PAM_ToggleEMAText";
-       isEMAVisible = true;
-       zoneButtonRectName = "PAM_ToggleZoneRect";
-       zoneButtonTextName = "PAM_ToggleZoneText";
-       isZoneVisible = true;
-       trendButtonRectName = "PAM_ToggleTrendRect";
-       trendButtonTextName = "PAM_ToggleTrendText";
+       emaButtonRectName = "PAM_ToggleEMARect_" + IntegerToString(timeframe);
+       emaButtonTextName = "PAM_ToggleEMAText_" + IntegerToString(timeframe);
+       isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
+       zoneButtonRectName = "PAM_ToggleZoneRect_" + IntegerToString(timeframe);
+       zoneButtonTextName = "PAM_ToggleZoneText_" + IntegerToString(timeframe);
+       isZoneVisible = true; // timeframe == inputTrendTimeframe ? true : false;
+       trendButtonRectName = "PAM_ToggleTrendRect_" + IntegerToString(timeframe);
+       trendButtonTextName = "PAM_ToggleTrendText_" + IntegerToString(timeframe);
        isTrendVisible = false;
-       arrowButtonRectName = "PAM_ToggleArrowRect";
-       arrowButtonTextName = "PAM_ToggleArrowText";
-       isArrowVisible = true;
+       arrowButtonRectName = "PAM_ToggleArrowRect_" + IntegerToString(timeframe);
+       arrowButtonTextName = "PAM_ToggleArrowText_" + IntegerToString(timeframe);
+       isArrowVisible = timeframe == inputTrendTimeframe ? true : false;
        zoneClass.init(timeframe, isZoneVisible);
        arrowClass.init(timeframe, isArrowVisible);
        highsAndLowsClass.init(timeframe, isTrendVisible);
+       CreateButton();
+       if(timeframe == inputTrendTimeframe) {
+         Print("Trend INIT");
+       } else {
+         Print("Execution INIT");
+       }
     }
     
    //+------------------------------------------------------------------+
@@ -85,8 +97,6 @@ public:
             UpdateEMA(i, trendTimeframe, 50);
          }
       }
-      
-      CreateButton();
    }
    
    //+------------------------------------------------------------------+
@@ -329,21 +339,21 @@ public:
       //| Initialize Buttons                                               |
       //+------------------------------------------------------------------+  
       void CreateButton() {
-          long yOffset = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
           int buttonHeight = 30;
+          long yOffset = trendTimeframe == inputTrendTimeframe ? ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2 : buttonHeight;
           int spacing = 10;  // Space between buttons
       
           // Create the first button (EMA Toggle)
-          CreateSingleButton(emaButtonRectName, emaButtonTextName, "Toggle EMA", yOffset - 11, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
+          CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend EMA" : "Exec EMA", yOffset - 11, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
       
           // Create the second button 10px below the first button
-          CreateSingleButton(zoneButtonRectName, zoneButtonTextName, "Toggle Zones", yOffset - 11 + buttonHeight + spacing, isZoneVisible ? clrDarkGreen : clrBlue, isZoneVisible ? clrGreen : clrDodgerBlue, clrWhite);
+          CreateSingleButton(zoneButtonRectName, zoneButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Zones" : "Exec Zones", yOffset - 11 + buttonHeight + spacing, isZoneVisible ? clrDarkGreen : clrBlue, isZoneVisible ? clrGreen : clrDodgerBlue, clrWhite);
           
           // Create the second button 10px below the second button
-          CreateSingleButton(trendButtonRectName, trendButtonTextName, "Toggle Trend", yOffset - 11 + (buttonHeight + spacing) * 2, isTrendVisible ? clrDarkGreen : clrBlue, isTrendVisible ? clrGreen : clrDodgerBlue, clrWhite);
+          CreateSingleButton(trendButtonRectName, trendButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Trend" : "Exec Trend", yOffset - 11 + (buttonHeight + spacing) * 2, isTrendVisible ? clrDarkGreen : clrBlue, isTrendVisible ? clrGreen : clrDodgerBlue, clrWhite);
           
           // Create the second button 10px below the second button
-          CreateSingleButton(arrowButtonRectName, arrowButtonTextName, "Toggle Arrow", yOffset - 11 + (buttonHeight + spacing) * 3, isArrowVisible ? clrDarkGreen : clrBlue, isArrowVisible ? clrGreen : clrDodgerBlue, clrWhite);
+          CreateSingleButton(arrowButtonRectName, arrowButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Arrow" : "Exec Arrow", yOffset - 11 + (buttonHeight + spacing) * 3, isArrowVisible ? clrDarkGreen : clrBlue, isArrowVisible ? clrGreen : clrDodgerBlue, clrWhite);
       }
       
       //+------------------------------------------------------------------+
@@ -362,7 +372,7 @@ public:
             }
          } else {
              // Code to delete EMA
-             DeleteEAObjects("PAM_EMA50");
+             DeleteEAObjects("PAM_EMA_" + IntegerToString(trendTimeframe));
          }
       }
       
@@ -376,7 +386,7 @@ public:
             // Code to draw Zone
             zoneClass.DrawAllZones();
          } else {
-            DeleteEAObjects("PAM_zone");
+            DeleteEAObjects("PAM_zone_" + IntegerToString(trendTimeframe));
          }
       }
       
@@ -390,7 +400,7 @@ public:
             // Code to draw Zone
             highsAndLowsClass.DrawAllTrends();
          } else {
-            DeleteEAObjects("PAM_trend");
+            DeleteEAObjects("PAM_trend_" + IntegerToString(trendTimeframe));
          }
       }
       
@@ -404,7 +414,7 @@ public:
             // Code to draw Zone
             arrowClass.DrawAllArrows();
          } else {
-            DeleteEAObjects("PAM_arrow");
+            DeleteEAObjects("PAM_arrow_" + IntegerToString(trendTimeframe));
          }
       }
       //+-----------------Toggle Functions - End---------------------------+

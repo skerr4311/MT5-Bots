@@ -33,6 +33,7 @@ public:
       arrowCount = 0;
       arrowTimeframe = timeframe;
       isArrowVisible = isVisible;
+      ArrayResize(arrows, 0);
    }
    
    //+------------------------------------------------------------------+
@@ -64,7 +65,7 @@ public:
    void InsertArrowObject(int candleId, TrendDirection trend) {
        arrowCount++;
        datetime time = getTime(arrowTimeframe, candleId);
-       string objectName = "PAM_arrow" + (string)arrowCount;
+       string objectName = "PAM_arrow_" + IntegerToString(arrowTimeframe) + (string)arrowCount;
        double price = trend == TREND_UP ? getLow(arrowTimeframe, candleId) : getHigh(arrowTimeframe, candleId);
        
        AddArrowInfo(time, objectName, price, trend);

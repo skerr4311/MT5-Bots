@@ -33,6 +33,7 @@ public:
       trendCount = 0;
       highsandlowsTimeframe = timeframe;
       isTrendVisible = isVisible;
+      ArrayResize(trends, 0);
    }
    
    //+------------------------------------------------------------------+
@@ -64,7 +65,7 @@ public:
    void InsertTrendObject(string label, double price, int candleId) {
        trendCount++;
        datetime time = getTime(highsandlowsTimeframe, candleId);
-       string objectName = "PAM_trend" + (string)trendCount;
+       string objectName = "PAM_trend_" + IntegerToString(highsandlowsTimeframe) + (string)trendCount;
        this.AddTrendInfo(objectName, label, price, time);
        if(isTrendVisible){
          DrawLabel(objectName, label, price, time);

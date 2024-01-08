@@ -39,6 +39,7 @@ public:
       zoneCount = 0;
       zoneTimeframe = timeframe;
       isZoneVisible = isVisible;
+      ArrayResize(zones, 0);
    }
     
    //+------------------------------------------------------------------+
@@ -80,7 +81,7 @@ public:
    //+------------------------------------------------------------------+
    void InsertZoneObject(int startCandleIndex, double priceTop, double priceBottom, TrendDirection trend) {
        datetime startTime = getTime(zoneTimeframe, startCandleIndex);
-       string rectName = "PAM_zone" + (string)zoneCount;
+       string rectName = "PAM_zone_" + IntegerToString(zoneTimeframe) + (string)zoneCount;
        zoneCount++;
        this.AddZoneInfo(rectName, priceTop, priceBottom, trend, startTime);
        if(isZoneVisible){
@@ -102,7 +103,7 @@ public:
    //| Delete Zone if 50% mitigated                                     |
    //+------------------------------------------------------------------+
    void CheckAndDeleteZones(int candleId) {
-       double currentPrice = getClose(trendTimeframe, candleId);
+       double currentPrice = getClose(zoneTimeframe, candleId);
        ZoneInfo updatedZones[];
        bool isUdateNeeded = false;
    
