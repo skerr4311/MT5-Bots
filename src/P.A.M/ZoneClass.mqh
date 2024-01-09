@@ -8,6 +8,7 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "CommonGlobals.mqh"
+#include "iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| Zone Class                                                       |
@@ -130,6 +131,36 @@ public:
           }
        }
    }
+   
+   //+------------------------------------------------------------------+
+   //| Check if price has rejected off a zone                           |
+   //+------------------------------------------------------------------+
+   bool CheckPriceRejection(int candleId) {
+       double currentPrice = getClose(zoneTimeframe, candleId);
+       double previousPrice = getClose(zoneTimeframe, candleId + 1);
+   
+       for (int i = 0; i < ArraySize(zones); i++) {
+           double zoneTop = zones[i].top;
+           double zoneBottom = zones[i].bottom;
+   
+           // Check if the previous price was outside the zone and current price is inside
+           if ((previousPrice < zoneBottom || previousPrice > zoneTop) &&
+               (currentPrice >= zoneBottom && currentPrice <= zoneTop)) {
+   
+               // Check for rejection
+               if (zones[i].trend == TREND_UP && currentPrice > zoneBottom + (zoneTop - zoneBottom) * 0.5) {
+                  DrawHorizontalLineWithLabel(currentPrice, clrGreen, 0, "bull rej");
+                  return true; // Bullish rejection
+               }
+               else if (zones[i].trend == TREND_DOWN && currentPrice < zoneTop - (zoneTop - zoneBottom) * 0.5) {
+                  DrawHorizontalLineWithLabel(currentPrice, clrRed, 0, "bear rej");
+                  return true; // Bearish rejection
+               }
+           }
+       }
+       return false;
+   }
+
    
    //+------------------------------------------------------------------+
    //| Toggle Zone                                                      |

@@ -106,6 +106,7 @@ public:
       OnTimeTick(0);
       handleChangeOfCharecter(0);
       zoneClass.CheckAndDeleteZones(0);
+      zoneClass.CheckPriceRejection(0);
       if(isEMAVisible) {
          UpdateEMA(0, trendTimeframe, 50);
       }
