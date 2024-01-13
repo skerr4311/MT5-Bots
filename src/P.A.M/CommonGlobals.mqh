@@ -34,3 +34,13 @@ string EnumToString(TrendDirection trend) {
             return "None";
     }
 }
+//+------------------------------------------------------------------+
+//| Candle object                                                    |
+//+------------------------------------------------------------------+
+struct CandleInfo {
+   double high;
+   double low;
+   double open;
+   double close;
+   bool isBull;
+};

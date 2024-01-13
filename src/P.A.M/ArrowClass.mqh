@@ -62,9 +62,9 @@ public:
    //+------------------------------------------------------------------+
    //| Insert new arrow                                                 |
    //+------------------------------------------------------------------+
-   void InsertArrowObject(int candleId, TrendDirection trend) {
+   void InsertArrowObject(int candleId, TrendDirection trend, bool execution) {
        arrowCount++;
-       datetime time = getTime(arrowTimeframe, candleId);
+       datetime time = getTime(execution ? inputExecutionTimeframe : arrowTimeframe, candleId);
        string objectName = "PAM_arrow_" + IntegerToString(arrowTimeframe) + (string)arrowCount;
        double price = trend == TREND_UP ? getLow(arrowTimeframe, candleId) : getHigh(arrowTimeframe, candleId);
        

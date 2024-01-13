@@ -23,6 +23,7 @@ private:
       string name;
       double top;
       double bottom;
+      double midPrice;
       TrendDirection trend;
       datetime startTime;
    };
@@ -53,6 +54,7 @@ public:
        info.bottom = bottom;
        info.trend = trend;
        info.startTime = startTime;
+       info.midPrice = (top + bottom) / 2;
        ArrayResize(zones, ArraySize(zones) + 1);
        zones[ArraySize(zones) - 1] = info;
    }
@@ -103,23 +105,42 @@ public:
    //+------------------------------------------------------------------+
    //| Delete Zone if 50% mitigated                                     |
    //+------------------------------------------------------------------+
-   void CheckAndDeleteZones(int candleId) {
-       double currentPrice = getClose(zoneTimeframe, candleId);
+   void CheckAndDeleteZones(int candleId) { 
+       double previousHigh = getHigh(zoneTimeframe, candleId + 1);
+       CandleInfo info = getCandleInfo(zoneTimeframe, candleId);
        ZoneInfo updatedZones[];
        bool isUdateNeeded = false;
+       string trend = previousHigh > info.high ? "up" : "down";
    
        for (int i = ArraySize(zones) - 1; i >= 0; i--) {
-           double midPrice = (zones[i].top + zones[i].bottom) / 2;
-           if ((currentPrice > midPrice && currentPrice < zones[i].top) || 
-               (currentPrice < midPrice && currentPrice > zones[i].bottom)) {
-               // Price has penetrated more than 50% into the rectangle
-               if(isZoneVisible) {
-                  ObjectDelete(0, zones[i].name);
+           double zoneTop = zones[i].top;
+           double zoneBottom = zones[i].bottom;
+           double midPrice = (zoneTop + zoneBottom) / 2;
+           
+           if (trend == "up") {
+               // Price is moving up
+               if(info.high > midPrice && info.close < zoneTop && info.open < zoneTop ) {
+                  if(isZoneVisible) {
+                     ObjectDelete(0, zones[i].name);
+                  }
+                  isUdateNeeded = true;
+               } else {
+                  ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
+                  updatedZones[ArraySize(updatedZones) - 1] = zones[i];
                }
-               isUdateNeeded = true;
+           
+           } else if (trend == "down") {
+               if(info.low < midPrice && info.close > zoneBottom && info.open > zoneBottom){
+                  if(isZoneVisible) {
+                     ObjectDelete(0, zones[i].name);
+                  }
+                  isUdateNeeded = true;
+               } else {
+                  ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
+                  updatedZones[ArraySize(updatedZones) - 1] = zones[i];
+               }
            } else {
-               ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
-               updatedZones[ArraySize(updatedZones) - 1] = zones[i];
+           // nothing 
            }
        }
        
@@ -135,29 +156,35 @@ public:
    //+------------------------------------------------------------------+
    //| Check if price has rejected off a zone                           |
    //+------------------------------------------------------------------+
-   bool CheckPriceRejection(int candleId) {
-       double currentPrice = getClose(zoneTimeframe, candleId);
-       double previousPrice = getClose(zoneTimeframe, candleId + 1);
+   bool CheckPriceRejection(int candleId, TrendDirection trend) {
+       CandleInfo current = getCandleInfo(zoneTimeframe, candleId);  
+       CandleInfo previous = getCandleInfo(zoneTimeframe, candleId + 1);
    
        for (int i = 0; i < ArraySize(zones); i++) {
-           double zoneTop = zones[i].top;
-           double zoneBottom = zones[i].bottom;
-   
-           // Check if the previous price was outside the zone and current price is inside
-           if ((previousPrice < zoneBottom || previousPrice > zoneTop) &&
-               (currentPrice >= zoneBottom && currentPrice <= zoneTop)) {
-   
-               // Check for rejection
-               if (zones[i].trend == TREND_UP && currentPrice > zoneBottom + (zoneTop - zoneBottom) * 0.5) {
-                  DrawHorizontalLineWithLabel(currentPrice, clrGreen, 0, "bull rej");
-                  return true; // Bullish rejection
+           ZoneInfo zone = zones[i];
+           
+           // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
+           // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
+           
+           if(trend == TREND_UP) {
+               if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
+                  DrawHorizontalLineWithLabel(current.close, clrGreen, 0, "bull rej");
+                  return true;
                }
-               else if (zones[i].trend == TREND_DOWN && currentPrice < zoneTop - (zoneTop - zoneBottom) * 0.5) {
-                  DrawHorizontalLineWithLabel(currentPrice, clrRed, 0, "bear rej");
-                  return true; // Bearish rejection
+
+           } else if (trend == TREND_DOWN) {
+           // Red zone
+               if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
+                  DrawHorizontalLineWithLabel(current.close, clrRed, 0, "bear rej");
+                  return true;
                }
+
+           } else {
+            // nothing
+
            }
        }
+       
        return false;
    }
 
@@ -168,5 +195,12 @@ public:
    bool ToggleIsVisible() {
        isZoneVisible = !isZoneVisible;
        return isZoneVisible;
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Get Zone size                                                    |
+   //+------------------------------------------------------------------+
+   int getZoneCount() {
+      return ArraySize(zones);
    }
 };

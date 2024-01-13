@@ -5,6 +5,10 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
+//| Inclue                                                           |
+//+------------------------------------------------------------------+
+#include "CommonGlobals.mqh"
+//+------------------------------------------------------------------+
 //| Functions Designed to simpliyp mq5 functions                     |
 //+------------------------------------------------------------------+
 
@@ -44,14 +48,22 @@ double getClose(ENUM_TIMEFRAMES timeframe, int candleId) {
 }
 
 //+------------------------------------------------------------------+
-//| Delete EA Objects                                                |
+//| check if bear candle                                             |
 //+------------------------------------------------------------------+
-void DeleteEAObjects(string prefix) {
-    int totalObjects = ObjectsTotal(0);
-    for(int i = totalObjects - 1; i >= 0; i--) {
-        string name = ObjectName(0, i);
-        if(StringFind(name, prefix) == 0) { // Check if the name starts with the prefix
-            ObjectDelete(0, name);
-        }
-    }
+double isBearCandle(ENUM_TIMEFRAMES timeframe, int candleId) {
+   double close = getClose(timeframe, candleId);
+   double open = getOpen(timeframe, candleId);
+   
+   return close > open;
+}
+
+CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
+   CandleInfo info;
+   info.close = getClose(timeframe, candleId);
+   info.high = getHigh(timeframe, candleId);
+   info.isBull = !isBearCandle(timeframe, candleId);
+   info.low = getLow(timeframe, candleId);
+   info.open = getOpen(timeframe, candleId);
+
+   return info;
 }

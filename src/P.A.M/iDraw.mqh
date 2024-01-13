@@ -189,3 +189,16 @@ void UpdateEMA(int candleId, ENUM_TIMEFRAMES timeframe, int period) {
       ObjectMove(0, lineName, 1, startTime, startEma);
   }
 }
+
+//+------------------------------------------------------------------+
+//| Delete EA Objects                                                |
+//+------------------------------------------------------------------+
+void DeleteEAObjects(string prefix) {
+    int totalObjects = ObjectsTotal(0);
+    for(int i = totalObjects - 1; i >= 0; i--) {
+        string name = ObjectName(0, i);
+        if(StringFind(name, prefix) == 0) { // Check if the name starts with the prefix
+            ObjectDelete(0, name);
+        }
+    }
+}
