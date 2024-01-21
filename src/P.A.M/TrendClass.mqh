@@ -25,7 +25,7 @@ private:
     datetime marketStructureExecutionTime;
     double highestHigh, highestLow, lowestLow, lowestHigh;
     double prevLL, prevLH, prevHH, prevHL;
-    bool isLowerLowReveseStarted, isHigherHighReverseStarted, isEMAVisible, isZoneVisible, isTrendVisible, isArrowVisible, isOncePerBar;
+    bool isLowerLowReveseStarted, isHigherHighReverseStarted, isEMAVisible, isZoneVisible, isTrendVisible, isArrowVisible;
     int indexLL, indexHH;
     TrendDirection currentTrend;
     ENUM_TIMEFRAMES trendTimeframe;
@@ -105,9 +105,6 @@ public:
    void HandleTrend() {
       OnTimeTick(0);
       handleChangeOfCharecter(0);
-      if (!isOncePerBar && trendTimeframe == inputTrendTimeframe) {
-         isOncePerBar = zoneClass.CheckPriceRejection(0, this.currentTrend);
-      }
       if(isEMAVisible) {
          UpdateEMA(0, trendTimeframe, 50);
       }
@@ -120,10 +117,9 @@ public:
       datetime prevCandletime = getTime(trendTimeframe, 1);
       
       if (prevCandletime != marketStructureExecutionTime) {
-         isOncePerBar = false;
          marketStructureExecutionTime = prevCandletime;
          IdentifyMarketStructure(1);
-         zoneClass.CheckAndDeleteZones(1);
+         zoneClass.CheckAndDeleteZones(3);
          zoneClass.UpdateZoneEndDates();
       }
    }
@@ -230,7 +226,7 @@ public:
             if(currentHigh > prevLH) {
                // confirmed choch
                double currentLow = getLow(trendTimeframe, candleId);
-               arrowClass.InsertArrowObject(candleId, TREND_UP, candleId == 1);
+               arrowClass.InsertArrowObject(candleId, TREND_UP, candleId == 0);
                currentTrend = TREND_UP;
                highestHigh = currentHigh;
                prevHH = currentHigh;
@@ -245,7 +241,7 @@ public:
             if(currentLow < prevHL) {
                // confirmed choch
                double currentHigh = getHigh(trendTimeframe, candleId);
-               arrowClass.InsertArrowObject(candleId, TREND_DOWN, candleId == 1);
+               arrowClass.InsertArrowObject(candleId, TREND_DOWN, candleId == 0);
                currentTrend = TREND_DOWN;
                lowestLow = currentLow;
                prevLL = currentLow;
@@ -450,6 +446,13 @@ public:
       //+------------------------------------------------------------------+
       int getZoneCount() {
          return zoneClass.getZoneCount();
+      }
+      
+      //+------------------------------------------------------------------+
+      //| Get Zone array                                                   |
+      //+------------------------------------------------------------------+
+      ZoneInfo getZones(int index) {
+         return zoneClass.getZones(index);
       }
     
 };

@@ -19,14 +19,6 @@ private:
    ENUM_TIMEFRAMES zoneTimeframe;
    bool isZoneVisible;
    int zoneCount;
-   struct ZoneInfo {
-      string name;
-      double top;
-      double bottom;
-      double midPrice;
-      TrendDirection trend;
-      datetime startTime;
-   };
    ZoneInfo zones[];
     
 public:
@@ -49,6 +41,7 @@ public:
    //+------------------------------------------------------------------+
    void AddZoneInfo(string name, double top, double bottom, TrendDirection trend, datetime startTime) {
        ZoneInfo info;
+       info.zoneTimeframe = zoneTimeframe;
        info.name = name;
        info.top = top;
        info.bottom = bottom;
@@ -113,35 +106,37 @@ public:
        string trend = previousHigh > info.high ? "up" : "down";
    
        for (int i = ArraySize(zones) - 1; i >= 0; i--) {
-           double zoneTop = zones[i].top;
-           double zoneBottom = zones[i].bottom;
-           double midPrice = (zoneTop + zoneBottom) / 2;
+           ZoneInfo zone = zones[i];
            
-           if (trend == "up") {
-               // Price is moving up
-               if(info.high > midPrice && info.close < zoneTop && info.open < zoneTop ) {
-                  if(isZoneVisible) {
-                     ObjectDelete(0, zones[i].name);
+           if (zone.zoneTimeframe == zoneTimeframe) {
+               if (trend == "up") {
+                  // Price is moving up
+                  if(info.high > zone.midPrice && info.close < zone.top && info.open < zone.top ) {
+                     if(isZoneVisible) {
+                        ObjectDelete(0, zone.name);
+                     }
+                     isUdateNeeded = true;
+                  } else {
+                     ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
+                     updatedZones[ArraySize(updatedZones) - 1] = zone;
                   }
-                  isUdateNeeded = true;
-               } else {
-                  ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
-                  updatedZones[ArraySize(updatedZones) - 1] = zones[i];
-               }
-           
-           } else if (trend == "down") {
-               if(info.low < midPrice && info.close > zoneBottom && info.open > zoneBottom){
-                  if(isZoneVisible) {
-                     ObjectDelete(0, zones[i].name);
+              
+              } else if (trend == "down") {
+                  if(info.low < zone.midPrice && info.close > zone.bottom && info.open > zone.bottom){
+                     if(isZoneVisible) {
+                        ObjectDelete(0, zone.name);
+                     }
+                     isUdateNeeded = true;
+                  } else {
+                     ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
+                     updatedZones[ArraySize(updatedZones) - 1] = zone;
                   }
-                  isUdateNeeded = true;
-               } else {
-                  ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
-                  updatedZones[ArraySize(updatedZones) - 1] = zones[i];
-               }
+              }
            } else {
-           // nothing 
+               ArrayResize(updatedZones, ArraySize(updatedZones) + 1);
+               updatedZones[ArraySize(updatedZones) - 1] = zone;
            }
+           
        }
        
        if(isUdateNeeded) {
@@ -152,42 +147,6 @@ public:
           }
        }
    }
-   
-   //+------------------------------------------------------------------+
-   //| Check if price has rejected off a zone                           |
-   //+------------------------------------------------------------------+
-   bool CheckPriceRejection(int candleId, TrendDirection trend) {
-       CandleInfo current = getCandleInfo(zoneTimeframe, candleId);  
-       CandleInfo previous = getCandleInfo(zoneTimeframe, candleId + 1);
-   
-       for (int i = 0; i < ArraySize(zones); i++) {
-           ZoneInfo zone = zones[i];
-           
-           // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
-           // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
-           
-           if(trend == TREND_UP) {
-               if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                  DrawHorizontalLineWithLabel(current.close, clrGreen, 0, "bull rej");
-                  return true;
-               }
-
-           } else if (trend == TREND_DOWN) {
-           // Red zone
-               if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                  DrawHorizontalLineWithLabel(current.close, clrRed, 0, "bear rej");
-                  return true;
-               }
-
-           } else {
-            // nothing
-
-           }
-       }
-       
-       return false;
-   }
-
    
    //+------------------------------------------------------------------+
    //| Toggle Zone                                                      |
@@ -202,5 +161,13 @@ public:
    //+------------------------------------------------------------------+
    int getZoneCount() {
       return ArraySize(zones);
+   }
+   
+   //+------------------------------------------------------------------+
+   //| Get Zone array                                                   |
+   //+------------------------------------------------------------------+
+   ZoneInfo getZones(int index) {
+      ZoneInfo zone = zones[index];
+      return zone;
    }
 };

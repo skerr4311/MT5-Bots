@@ -6,6 +6,7 @@
 
 input ENUM_TIMEFRAMES inputTrendTimeframe = PERIOD_H1; // Trend timeframe
 input ENUM_TIMEFRAMES inputExecutionTimeframe = PERIOD_M15; // Execution timeframe
+input double risk_percent = 0.01; // Risk %
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -43,4 +44,36 @@ struct CandleInfo {
    double open;
    double close;
    bool isBull;
+};
+//+------------------------------------------------------------------+
+//| Position Types                                                   |
+//+------------------------------------------------------------------+
+enum PositionTypes {
+   SELL_NOW,
+   SELL_STOP,
+   SELL_LIMIT,
+   BUY_NOW,
+   BUY_STOP,
+   BUY_LIMIT,
+};
+//+------------------------------------------------------------------+
+//| Trade Object                                                     |
+//+------------------------------------------------------------------+
+struct TradeActionInfo {
+   string comment;
+   double top;
+   double bottom;
+   PositionTypes postionType;
+};
+//+------------------------------------------------------------------+
+//| Zone Type                                                        |
+//+------------------------------------------------------------------+
+struct ZoneInfo {
+   ENUM_TIMEFRAMES zoneTimeframe;
+   string name;
+   double top;
+   double bottom;
+   double midPrice;
+   TrendDirection trend;
+   datetime startTime;
 };
