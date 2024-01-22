@@ -18,6 +18,8 @@ class TradeHandler
       private:
          TrendClass trendClass;
          TrendClass executionClass;
+         TrendDirection trendArrow;
+         TrendDirection executionArrow;
       
       public:
          // Constructor
@@ -27,9 +29,11 @@ class TradeHandler
          void init(int lookback) {
             trendClass.init(lookBack, inputTrendTimeframe);
             trendClass.SetInitialMarketTrend();
+            trendArrow = trendClass.getTrend();
             
             executionClass.init(lookBack, inputExecutionTimeframe);
             executionClass.SetInitialMarketTrend();
+            executionArrow = executionClass.getTrend();
          }
          
          // ontick fuction()
@@ -37,7 +41,11 @@ class TradeHandler
             trendClass.HandleTrend();
             executionClass.HandleTrend();
             
+            // check one
             CheckPriceRejection(1, trendClass.getTrend());
+            
+            // check two
+            CheckTrendDirectionChange();
             
             // run the check on each 
             UpdateInfoBox();
@@ -56,12 +64,34 @@ class TradeHandler
          //+------------------------------------------------------------------+
          void UpdateInfoBox() {
              Comment(EA_Name, 
-             "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
-             "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
+             "\nTrend Direction: ", EnumToString(trendArrow), 
+             "\nExecute Direction: ", EnumToString(executionArrow),
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
              "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
-             "\nAccount Balance: ", GetAccountBalance(),
-             "\nAccount Currency: ", GetAccountCurrency());
+             "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance());
+         }
+         
+         void CheckTrendDirectionChange() {
+            TrendDirection trend = trendClass.getTrend();
+            
+            if (trendArrow != trend) {
+            Print("trebd hit");
+               if(EnumToString(trend) == "Down") {
+                  double pips = CalculatePipDistance(getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
+                  Print("Pips: ", (string)pips);
+                  double lotSize = CalculatePositionSize(risk_percent, pips);
+                  Print("lot size: ", (string)lotSize);
+                  double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
+                  SellNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
+               } else if (EnumToString(trend) == "Up") {
+                  // trigger a buy
+                  Print("buy trigger");
+               }
+               
+               trendArrow = trend;
+            }
+            
+            executionArrow = executionClass.getTrend();
          }
          
          //+------------------------------------------------------------------+
@@ -90,16 +120,7 @@ class TradeHandler
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        DrawHorizontalLineWithLabel(current.close, clrRed, 0, "bear rej");
-                        Print("Top: ", zone.top);
-                        Print("Bottom: ", zone.bottom);
-                        double pips = CalculatePipDistance(zone.top, zone.bottom);
-                        Print("Pip size: ", string(pips));
-                        double lotSize = CalculatePositionSize(risk_percent, pips);
-                        Print("lotSize: ", lotSize);
-                        double stopLoss = CalculateTakeProfit(zone.bottom, zone.top, 3.0, false);
-                        Print("Take profit: ", stopLoss);
-                        SellNow(lotSize, zone.top, stopLoss, "testing stop loss");
+                        HandleTrade(SELL_NOW, zone, getClose(inputExecutionTimeframe, 0));
                         return true;
                      }
       

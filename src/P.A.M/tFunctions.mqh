@@ -8,19 +8,17 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include <Trade\Trade.mqh>
-
+CTrade trade;
 
 // Open a market Buy order
-void BuyNow(double volume, double sl = 0, double tp = 0, string comment = "")
-  {
-   trade.Buy(volume, Symbol(), sl, tp, 0, comment);
-  }
+void BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+   trade.Buy(volume, Symbol(), 0.0, sl, tp, "testing buy now");
+}
 
 // Open a market Sell order
-void SellNow(double volume, double sl = 0, double tp = 0, string comment = "")
-  {
-   trade.Sell(volume, Symbol(), sl, tp, 0, comment);
-  }
+void SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+   trade.Sell(volume, Symbol(), 0.0, sl, tp, comment);
+}
 
 // BuyLimit
 
@@ -181,23 +179,25 @@ string GetAccountCurrency()
 
 double CalculatePositionSize(double riskPercentage, double stopLossPips) {
     double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
-    int leverage = AccountInfoInteger(ACCOUNT_LEVERAGE);
-    double riskAmount = accountBalance * riskPercentage / 100.0;
+    string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
+    double riskAmount = accountBalance * riskPercentage;
+    
+    Print("risk%: ", riskAmount);
 
-    // Calculate pip value in account currency
-    double pipValue = CalculatePipValue(Symbol(), accountBalance, leverage);
+    // Calculate the pip value in the account's currency
+    double pipValue = CalculatePipValueInAccountCurrency(Symbol(), accountCurrency);
 
-    // Total risk in monetary terms
+    // Calculate the risk in terms of the account's currency
     double totalRisk = stopLossPips * pipValue;
 
-    // Position size in lots
+    // Calculate the position size in lots
     double positionSize = riskAmount / totalRisk;
 
-    // Normalize to the nearest allowed lot size
+    // Normalize the position size to the nearest allowed lot size
     double lotStep = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
     positionSize = NormalizeDouble(MathRound(positionSize / lotStep) * lotStep, _Digits);
 
-    // Check minimum and maximum limits
+    // Check minimum and maximum volume limits
     double minVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
     double maxVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
     positionSize = MathMin(MathMax(positionSize, minVolume), maxVolume);
@@ -205,48 +205,37 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips) {
     return positionSize;
 }
 
-double CalculatePipValue(string symbol, double accountBalance, double leverage) {
-    double pip = SymbolInfoDouble(symbol, SYMBOL_POINT);
+double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
+    // Determine pip size
+    double pipSize = SymbolInfoDouble(symbol, SYMBOL_POINT);
     int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-    pip = (digits == 5 || digits == 3) ? 0.00010 : 0.01;
+    pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;
 
     // Calculate the value of a pip in the quote currency
-    double pipValue = pip * SymbolInfoDouble(symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+    double contractSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+    double pipValue = pipSize * contractSize;
 
-    // Convert pip value to account currency if necessary
-    if (!IsAccountCurrencySameAsQuoteCurrency(symbol)) {
-        pipValue = ConvertPipValueToAccountCurrency(pipValue, symbol);
-    }
-
-    // Adjust pip value based on leverage
-    pipValue = pipValue / leverage;
-
-    return pipValue;
-}
-
-bool IsAccountCurrencySameAsQuoteCurrency(string symbol) {
-    string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
+    // If account currency is different from quote currency, convert pip value
     string quoteCurrency = StringSubstr(symbol, StringLen(symbol) - 3);
-    return (accountCurrency == quoteCurrency);
-}
-
-double ConvertPipValueToAccountCurrency(double pipValue, string symbol) {
-    string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
-    string baseCurrency = StringSubstr(symbol, 0, 3);
-    string pairToCheck = baseCurrency + "/" + accountCurrency;
-
-    if (SymbolInfoDouble(pairToCheck, SYMBOL_ASK) > 0) {
-        double exchangeRate = SymbolInfoDouble(pairToCheck, SYMBOL_ASK);
-        return pipValue / exchangeRate;
-    } else {
-        pairToCheck = accountCurrency + "/" + baseCurrency;
-        if (SymbolInfoDouble(pairToCheck, SYMBOL_ASK) > 0) {
-            double exchangeRate = SymbolInfoDouble(pairToCheck, SYMBOL_ASK);
-            return pipValue * exchangeRate;
+    if(accountCurrency != quoteCurrency) {
+        // Attempt direct conversion first
+        string conversionSymbol = quoteCurrency + accountCurrency;
+        if (SymbolInfoDouble(conversionSymbol, SYMBOL_ASK) > 0) {
+            double exchangeRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
+            pipValue /= exchangeRate;
+        } else {
+            // Attempt reverse conversion
+            conversionSymbol = accountCurrency + quoteCurrency;
+            if (SymbolInfoDouble(conversionSymbol, SYMBOL_ASK) > 0) {
+                double exchangeRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
+                pipValue *= exchangeRate;
+            } else {
+                Print("Error: Unable to find exchange rate for ", conversionSymbol);
+                return 0; // Handle this error appropriately
+            }
         }
     }
 
-    // Return original pip value if conversion is not possible
     return pipValue;
 }
 
@@ -296,6 +285,15 @@ double CalculateTakeProfit(double entryPrice, double stopLoss, double riskReward
 
     // Normalize to the correct number of digits
     return NormalizeDouble(takeProfitPrice, digits);
+}
+
+void HandleTrade(PositionTypes type, ZoneInfo &zone, double price){
+   double pips = CalculatePipDistance(zone.top, price);
+   Print("Pips: ", (string)pips);
+   double lotSize = CalculatePositionSize(risk_percent, pips);
+   Print("lot size: ", (string)lotSize);
+   double stopLoss = CalculateTakeProfit(price, zone.top, 3.0, false);
+   SellNow(lotSize, zone.top, stopLoss, "testing stop loss");
 }
 
 
