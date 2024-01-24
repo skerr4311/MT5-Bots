@@ -7,6 +7,7 @@
 //+------------------------------------------------------------------+
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
+#include "CommonGlobals.mqh"
 #include <Trade\Trade.mqh>
 CTrade trade;
 
@@ -177,7 +178,7 @@ string GetAccountCurrency()
    return AccountInfoString(ACCOUNT_CURRENCY);
   }
 
-double CalculatePositionSize(double riskPercentage, double stopLossPips) {
+double CalculatePositionSize(double riskPercentage, double stopLossPips, double &positionSize) {
     double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
     string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
     double riskAmount = accountBalance * riskPercentage;
@@ -190,8 +191,9 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips) {
     // Calculate the risk in terms of the account's currency
     double totalRisk = stopLossPips * pipValue;
 
+    if(riskAmount == 0 || totalRisk == 0) { return false; }
     // Calculate the position size in lots
-    double positionSize = riskAmount / totalRisk;
+    positionSize = riskAmount / totalRisk;
 
     // Normalize the position size to the nearest allowed lot size
     double lotStep = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
@@ -202,7 +204,7 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips) {
     double maxVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
     positionSize = MathMin(MathMax(positionSize, minVolume), maxVolume);
 
-    return positionSize;
+    return true;
 }
 
 double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
@@ -287,13 +289,27 @@ double CalculateTakeProfit(double entryPrice, double stopLoss, double riskReward
     return NormalizeDouble(takeProfitPrice, digits);
 }
 
-void HandleTrade(PositionTypes type, ZoneInfo &zone, double price){
-   double pips = CalculatePipDistance(zone.top, price);
+void HandleTrade(PositionTypes type, double priceOffset, double price, string message = ""){
+   // Check if there is enough equity to take the trade.
+   
+   Print(PositionToString(type));
+   
+   double pips = CalculatePipDistance(priceOffset, price);
    Print("Pips: ", (string)pips);
-   double lotSize = CalculatePositionSize(risk_percent, pips);
+   
+   double lotSize;
+   if(!CalculatePositionSize(risk_percent, pips, lotSize)) {return; }
    Print("lot size: ", (string)lotSize);
-   double stopLoss = CalculateTakeProfit(price, zone.top, 3.0, false);
-   SellNow(lotSize, zone.top, stopLoss, "testing stop loss");
+   
+   double stopLoss = CalculateTakeProfit(price, priceOffset, 3.0, false);
+   Print("Stoploss: ", (string)stopLoss);
+   
+   if (type == SELL_NOW) {
+      SellNow(lotSize, priceOffset, stopLoss, message);
+   } else {
+      BuyNow(lotSize, priceOffset, stopLoss, message);
+   }
+   
 }
 
 

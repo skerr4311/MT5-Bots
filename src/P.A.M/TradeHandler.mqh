@@ -73,25 +73,31 @@ class TradeHandler
          
          void CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
+            executionArrow = executionClass.getTrend();
             
             if (trendArrow != trend) {
-            Print("trebd hit");
-               if(EnumToString(trend) == "Down") {
-                  double pips = CalculatePipDistance(getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
-                  Print("Pips: ", (string)pips);
-                  double lotSize = CalculatePositionSize(risk_percent, pips);
-                  Print("lot size: ", (string)lotSize);
-                  double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
-                  SellNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
-               } else if (EnumToString(trend) == "Up") {
-                  // trigger a buy
-                  Print("buy trigger");
+               if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
+                  closePositions(1);
+                  // double pips = CalculatePipDistance(getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
+                  // Print("Pips: ", (string)pips);
+                  // double lotSize;
+                  // if(!CalculatePositionSize(risk_percent, pips, lotSize)) { return; };
+                  // Print("lot size: ", (string)lotSize);
+                  // double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
+                  // SellNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
+               } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
+                  closePositions(2);
+                  // double pips = CalculatePipDistance(getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
+                  // Print("Pips: ", (string)pips);
+                  // double lotSize;
+                  // if (!CalculatePositionSize(risk_percent, pips, lotSize)) { return; };
+                  // Print("lot size: ", (string)lotSize);
+                  // double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
+                  // BuyNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
                }
                
                trendArrow = trend;
             }
-            
-            executionArrow = executionClass.getTrend();
          }
          
          //+------------------------------------------------------------------+
@@ -110,17 +116,14 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        DrawHorizontalLineWithLabel(current.close, clrGreen, 0, "bull rej");
-                        Print("Top: ", zone.top);
-                        Print("Bottom: ", zone.bottom);
-                        Print(CalculatePipDistance(zone.top, zone.bottom));
+                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
       
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        HandleTrade(SELL_NOW, zone, getClose(inputExecutionTimeframe, 0));
+                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }
       
