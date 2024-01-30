@@ -13,7 +13,7 @@ CTrade trade;
 
 // Open a market Buy order
 void BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
-   trade.Buy(volume, Symbol(), 0.0, sl, tp, "testing buy now");
+   trade.Buy(volume, Symbol(), 0.0, sl, tp, comment);
 }
 
 // Open a market Sell order
@@ -182,64 +182,69 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
     double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
     string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
     double riskAmount = accountBalance * riskPercentage;
-    
-    Print("risk%: ", riskAmount);
 
-    // Calculate the pip value in the account's currency
+    Print("Account Balance: $", accountBalance);
+    Print("Risk Amount: $", riskAmount);
+
     double pipValue = CalculatePipValueInAccountCurrency(Symbol(), accountCurrency);
+    Print("Pip Value: $", pipValue);
 
-    // Calculate the risk in terms of the account's currency
     double totalRisk = stopLossPips * pipValue;
+    Print("Total Risk: $", totalRisk);
 
-    if(riskAmount == 0 || totalRisk == 0) { return false; }
-    // Calculate the position size in lots
+    if(totalRisk == 0) {
+        Print("Error: Total risk is zero.");
+        return 0;
+    }
+
     positionSize = riskAmount / totalRisk;
+    Print("Raw Position Size: ", positionSize, " lots");
 
-    // Normalize the position size to the nearest allowed lot size
     double lotStep = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
-    positionSize = NormalizeDouble(MathRound(positionSize / lotStep) * lotStep, _Digits);
-
-    // Check minimum and maximum volume limits
     double minVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
     double maxVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MAX);
+
+    positionSize = NormalizeDouble(MathRound(positionSize / lotStep) * lotStep, _Digits);
     positionSize = MathMin(MathMax(positionSize, minVolume), maxVolume);
 
-    return true;
+    Print("Normalized Position Size: ", positionSize, " lots");
+    Print("Lot Step: ", lotStep);
+    Print("Min Volume: ", minVolume);
+    Print("Max Volume: ", maxVolume);
+
+    return positionSize;
 }
 
 double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
-    // Determine pip size
-    double pipSize = SymbolInfoDouble(symbol, SYMBOL_POINT);
+    double pipSize;
     int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-    pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;
+    
+    // For JPY pairs, a pip is the second decimal place (0.01), otherwise it's the fourth decimal place (0.0001)
+    pipSize = (StringFind(symbol, "JPY") > -1) ? 0.01 : 0.0001;
 
     // Calculate the value of a pip in the quote currency
     double contractSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_CONTRACT_SIZE);
     double pipValue = pipSize * contractSize;
 
-    // If account currency is different from quote currency, convert pip value
+    // Convert pip value to account currency if necessary
     string quoteCurrency = StringSubstr(symbol, StringLen(symbol) - 3);
     if(accountCurrency != quoteCurrency) {
-        // Attempt direct conversion first
-        string conversionSymbol = quoteCurrency + accountCurrency;
+        string conversionSymbol = (accountCurrency == "USD" || quoteCurrency == "USD") ? 
+                                  accountCurrency + quoteCurrency : quoteCurrency + "/" + accountCurrency;
+
         if (SymbolInfoDouble(conversionSymbol, SYMBOL_ASK) > 0) {
             double exchangeRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
-            pipValue /= exchangeRate;
+            pipValue = (accountCurrency == "USD" || quoteCurrency == "USD") ? pipValue / exchangeRate : pipValue * exchangeRate;
         } else {
-            // Attempt reverse conversion
-            conversionSymbol = accountCurrency + quoteCurrency;
-            if (SymbolInfoDouble(conversionSymbol, SYMBOL_ASK) > 0) {
-                double exchangeRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
-                pipValue *= exchangeRate;
-            } else {
-                Print("Error: Unable to find exchange rate for ", conversionSymbol);
-                return 0; // Handle this error appropriately
-            }
+            Print("Error: Unable to find exchange rate for ", conversionSymbol);
+            return 0; // Handle this error appropriately
         }
     }
 
     return pipValue;
 }
+
+
 
   
 double CalculatePipDistance(double price1, double price2) {
@@ -266,10 +271,10 @@ double CalculatePipDistance(double price1, double price2) {
 // Returns:
 //   double - Calculated take profit price
 double CalculateTakeProfit(double entryPrice, double stopLoss, double riskRewardRatio, bool isBuy) {
-    double pipSize = SymbolInfoDouble(Symbol(), SYMBOL_POINT);
     int digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
+    double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;  // Adjust pip size for JPY pairs
 
-    // Calculate the distance between entry price and stop loss
+    // Calculate the distance between entry price and stop loss in pips
     double riskDistance = MathAbs(entryPrice - stopLoss) / pipSize;
 
     // Calculate the take profit distance based on the risk-reward ratio
@@ -293,6 +298,8 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    // Check if there is enough equity to take the trade.
    
    Print(PositionToString(type));
+   Print("Price: ", DoubleToString(price));
+   Print("Stop loss: ", DoubleToString(priceOffset));
    
    double pips = CalculatePipDistance(priceOffset, price);
    Print("Pips: ", (string)pips);
@@ -301,13 +308,13 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    if(!CalculatePositionSize(risk_percent, pips, lotSize)) {return; }
    Print("lot size: ", (string)lotSize);
    
-   double stopLoss = CalculateTakeProfit(price, priceOffset, 3.0, false);
-   Print("Stoploss: ", (string)stopLoss);
+   double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");
+   Print("takeProfit: ", (string)takeProfit);
    
-   if (type == SELL_NOW) {
-      SellNow(lotSize, priceOffset, stopLoss, message);
+   if (PositionToString(type) == "Sell Now") {
+      SellNow(lotSize, priceOffset, takeProfit, message);
    } else {
-      BuyNow(lotSize, priceOffset, stopLoss, message);
+      BuyNow(lotSize, priceOffset, takeProfit, message);
    }
    
 }

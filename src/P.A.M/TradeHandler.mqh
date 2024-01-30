@@ -68,7 +68,8 @@ class TradeHandler
              "\nExecute Direction: ", EnumToString(executionArrow),
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
              "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
-             "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance());
+             "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
+             "\nAccount Balance: ", GetAccountBalance());
          }
          
          void CheckTrendDirectionChange() {
@@ -76,24 +77,13 @@ class TradeHandler
             executionArrow = executionClass.getTrend();
             
             if (trendArrow != trend) {
+               Print("switch: ", EnumToString(trend));
                if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
-                  closePositions(1);
-                  // double pips = CalculatePipDistance(getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
-                  // Print("Pips: ", (string)pips);
-                  // double lotSize;
-                  // if(!CalculatePositionSize(risk_percent, pips, lotSize)) { return; };
-                  // Print("lot size: ", (string)lotSize);
-                  // double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
-                  // SellNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
+                  // closePositions(1);
+                  HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
                } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
-                  closePositions(2);
-                  // double pips = CalculatePipDistance(getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0));
-                  // Print("Pips: ", (string)pips);
-                  // double lotSize;
-                  // if (!CalculatePositionSize(risk_percent, pips, lotSize)) { return; };
-                  // Print("lot size: ", (string)lotSize);
-                  // double stopLoss = CalculateTakeProfit(getClose(inputTrendTimeframe, 0), getHigh(inputTrendTimeframe, 0), 3.0, false);
-                  // BuyNow(lotSize, getHigh(inputTrendTimeframe, 0), stopLoss, "testing stop loss");
+                  // closePositions(2);
+                  HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
                }
                
                trendArrow = trend;
@@ -116,14 +106,14 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
+                        // HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
       
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
+                        // HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }
       
