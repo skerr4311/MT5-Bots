@@ -360,10 +360,12 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    
    Print("Spread: ", (string)CalculateSpread());
    
-   if (PositionToString(type) == "Sell Now") {
-      SellNow(lotSize, priceOffset, takeProfit, message);
-   } else {
-      BuyNow(lotSize, priceOffset, takeProfit, message);
+   if(enableTrading) {
+      if (PositionToString(type) == "Sell Now") {
+         SellNow(lotSize, priceOffset, takeProfit, message);
+      } else {
+         BuyNow(lotSize, priceOffset, takeProfit, message);
+      }
    }
    
 }

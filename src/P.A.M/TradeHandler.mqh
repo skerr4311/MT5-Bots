@@ -20,6 +20,7 @@ class TradeHandler
          TrendClass executionClass;
          TrendDirection trendArrow;
          TrendDirection executionArrow;
+         datetime oncePerBar;
       
       public:
          // Constructor
@@ -34,6 +35,8 @@ class TradeHandler
             executionClass.init(lookBack, inputExecutionTimeframe);
             executionClass.SetInitialMarketTrend();
             executionArrow = executionClass.getTrend();
+            
+            oncePerBar = getTime(inputExecutionTimeframe, 0);
          }
          
          // ontick fuction()
@@ -48,12 +51,26 @@ class TradeHandler
          //| Check for entry                                                  |
          //+------------------------------------------------------------------+
          void checkForEntry() {
-         
-            // check one
-            CheckPriceRejection(1, trendClass.getTrend());
-            
-            // check two
-            CheckTrendDirectionChange();
+            datetime current = getTime(inputExecutionTimeframe, 0);
+            if(current != oncePerBar && CalculateSpread() < 3.0) {
+               // check one
+               // if(CheckPriceRejection(1, trendClass.getTrend())){
+                  // oncePerBar = current;
+                  // return;
+               // }
+               
+               // check two
+               // if(CheckTrendDirectionChange()) {
+                  // oncePerBar = current;
+                  // return;
+               // }
+               
+               // check three
+               if (CheckRejectionOffEma()) {
+                  oncePerBar = current;
+                  return;
+               }
+            }
          }
          
          //+------------------------------------------------------------------+
@@ -77,6 +94,35 @@ class TradeHandler
              "\nAccount Balance: ", GetAccountBalance());
          }
          
+         //+------------------------------------------------------------------+
+         //| Check rejection off EMA                                          |
+         //+------------------------------------------------------------------+
+         bool CheckRejectionOffEma() {
+            double fiftyEMA = GetEMAForBar(1, inputTrendTimeframe, 50);
+            TrendDirection trend = trendClass.getTrend();
+            CandleInfo prevCandle = getCandleInfo(inputTrendTimeframe, 1);
+            
+            if (EnumToString(trend) == "Down") {
+               // Check for ema rejection
+               if(prevCandle.high >= fiftyEMA && prevCandle.close <= fiftyEMA){
+                  HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 1), getClose(inputTrendTimeframe, 0), "50ema rejection down");
+                  return true;
+               }
+               
+            } else {
+               // Check for ema rejection
+               if(prevCandle.low <= fiftyEMA && prevCandle.close >= fiftyEMA) {
+                  HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 1), getClose(inputTrendTimeframe, 0), "50ema rejection up");
+                  return true;
+               }
+            }
+            
+            return false;
+         }
+         
+         //+------------------------------------------------------------------+
+         //| Check trend direction                                            |
+         //+------------------------------------------------------------------+
          bool CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
             executionArrow = executionClass.getTrend();
@@ -115,25 +161,24 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        // HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
+                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
-      
+         
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        // HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
+                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }
-      
+         
                  } else {
                   // nothing
-      
+         
                  }
              }
              
              return false;
          }
-
   };
 //+------------------------------------------------------------------+
