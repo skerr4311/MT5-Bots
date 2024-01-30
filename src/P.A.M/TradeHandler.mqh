@@ -40,15 +40,20 @@ class TradeHandler
          void OnTick() {
             trendClass.HandleTrend();
             executionClass.HandleTrend();
-            
+            checkForEntry();
+            UpdateInfoBox();
+         }
+         
+         //+------------------------------------------------------------------+
+         //| Check for entry                                                  |
+         //+------------------------------------------------------------------+
+         void checkForEntry() {
+         
             // check one
             CheckPriceRejection(1, trendClass.getTrend());
             
             // check two
             CheckTrendDirectionChange();
-            
-            // run the check on each 
-            UpdateInfoBox();
          }
          
          //+------------------------------------------------------------------+
@@ -72,7 +77,7 @@ class TradeHandler
              "\nAccount Balance: ", GetAccountBalance());
          }
          
-         void CheckTrendDirectionChange() {
+         bool CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
             executionArrow = executionClass.getTrend();
             
@@ -81,13 +86,17 @@ class TradeHandler
                if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
                   // closePositions(1);
                   HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
+                  return true;
                } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
                   // closePositions(2);
                   HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
+                  return true;
                }
                
                trendArrow = trend;
             }
+            
+            return false;
          }
          
          //+------------------------------------------------------------------+

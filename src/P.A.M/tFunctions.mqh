@@ -149,16 +149,25 @@ bool closePositions(int all_buy_sell)
    return true;
   }
 
+//+------------------------------------------------------------------+
+//| Get Account Balance                                              |
+//+------------------------------------------------------------------+
 double GetAccountBalance()
   {
    return AccountInfoDouble(ACCOUNT_BALANCE);
   }
-
+  
+//+------------------------------------------------------------------+
+//| Get account equity                                               |
+//+------------------------------------------------------------------+
 double GetAccountEquity()
   {
    return AccountInfoDouble(ACCOUNT_EQUITY);
   }
 
+//+------------------------------------------------------------------+
+//| Get current profit                                               |
+//+------------------------------------------------------------------+
 double GetCurrentProfit()
   {
    double totalProfit = 0;
@@ -173,11 +182,17 @@ double GetCurrentProfit()
    return totalProfit;
   }
 
+//+------------------------------------------------------------------+
+//| Get account currency                                             |
+//+------------------------------------------------------------------+
 string GetAccountCurrency()
   {
    return AccountInfoString(ACCOUNT_CURRENCY);
   }
 
+//+------------------------------------------------------------------+
+//| Calvulate position size                                          |
+//+------------------------------------------------------------------+
 double CalculatePositionSize(double riskPercentage, double stopLossPips, double &positionSize) {
     double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
     string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
@@ -215,6 +230,9 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
     return positionSize;
 }
 
+//+------------------------------------------------------------------+
+//| Calculate pip value in account currency                          |
+//+------------------------------------------------------------------+
 double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
     double pipSize;
     int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
@@ -244,9 +262,9 @@ double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency)
     return pipValue;
 }
 
-
-
-  
+//+------------------------------------------------------------------+
+//| Calculate pip distance                                           |
+//+------------------------------------------------------------------+
 double CalculatePipDistance(double price1, double price2) {
     // Calculate the absolute difference in prices
     double difference = MathAbs(price1 - price2);
@@ -262,14 +280,9 @@ double CalculatePipDistance(double price1, double price2) {
     return NormalizeDouble(pips, 2);
 }
 
-// Calculate Take Profit point based on a risk-reward ratio
-// Parameters:
-//   double entryPrice - Entry price of the trade
-//   double stopLoss - Stop loss price
-//   double riskRewardRatio - Risk to reward ratio (e.g., 1:3 would be 3.0)
-//   bool isBuy - Indicates if the trade is a buy (true) or sell (false)
-// Returns:
-//   double - Calculated take profit price
+//+------------------------------------------------------------------+
+//| Calculate take profit                                            |
+//+------------------------------------------------------------------+
 double CalculateTakeProfit(double entryPrice, double stopLoss, double riskRewardRatio, bool isBuy) {
     int digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
     double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;  // Adjust pip size for JPY pairs
@@ -294,6 +307,40 @@ double CalculateTakeProfit(double entryPrice, double stopLoss, double riskReward
     return NormalizeDouble(takeProfitPrice, digits);
 }
 
+//+------------------------------------------------------------------+
+//| Calculate spread                                                 |
+//+------------------------------------------------------------------+
+double CalculateSpread() {
+    // Ensure the symbol's prices are updated
+    if (!SymbolInfoTick(Symbol(), MqlTick())) {
+        Print("Failed to get symbol info for ", Symbol());
+        return -1; // Return an error code
+    }
+
+    // Get Ask and Bid prices
+    double askPrice = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
+    double bidPrice = SymbolInfoDouble(Symbol(), SYMBOL_BID);
+
+    // Calculate the difference between Ask and Bid
+    double spread = askPrice - bidPrice;
+
+    // Determine the pip size
+    double pipSize = SymbolInfoDouble(Symbol(), SYMBOL_POINT);
+    int digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
+    if (digits == 3 || digits == 5) {
+        pipSize *= 10; // For JPY pairs and pairs with 5 decimal places
+    }
+
+    // Convert the spread to pips
+    double spreadPips = spread / pipSize;
+
+    // Return the spread in pips
+    return spreadPips;
+}
+
+//+------------------------------------------------------------------+
+//| Handle trade                                                     |
+//+------------------------------------------------------------------+
 void HandleTrade(PositionTypes type, double priceOffset, double price, string message = ""){
    // Check if there is enough equity to take the trade.
    
@@ -310,6 +357,8 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    
    double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");
    Print("takeProfit: ", (string)takeProfit);
+   
+   Print("Spread: ", (string)CalculateSpread());
    
    if (PositionToString(type) == "Sell Now") {
       SellNow(lotSize, priceOffset, takeProfit, message);
