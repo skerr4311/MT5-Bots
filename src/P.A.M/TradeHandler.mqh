@@ -56,24 +56,24 @@ class TradeHandler
             datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
             if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
                // check one
-               // if(CheckPriceRejection(1, trendClass.getTrend())){
-                  // oncePerBar = current;
-                  // return;
-               // }
-               
-               // check two
-               if(CheckTrendDirectionChange()) {
-                  currentExecTime = currentExecTime;
+               if(CheckPriceRejection(1, trendClass.getTrend())){
+                  oncePerBarExec = currentExecTime;
                   return;
                }
+               
+               // check two
+               // if(CheckTrendDirectionChange()) {
+                  // currentExecTime = currentExecTime;
+                  // return;
+               // }
             }
             
             datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
             if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
-               if (CheckRejectionOffEma()) {
-                  oncePerBarTrend = currentTrendTime;
-                  return;
-               }
+               // if (CheckRejectionOffEma()) {
+                  // oncePerBarTrend = currentTrendTime;
+                  // return;
+               // }
             }
          }
          
@@ -157,8 +157,36 @@ class TradeHandler
              CandleInfo current = getCandleInfo(inputExecutionTimeframe, candleId);  
              CandleInfo previous = getCandleInfo(inputExecutionTimeframe, candleId + 1);
          
+             /*
+               
              for (int i = 0; i < trendClass.getZoneCount(); i++) {
                  ZoneInfo zone = trendClass.getZones(i);
+                 
+                 // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
+                 // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
+                 
+                 if(trend == TREND_UP) {
+                     // Price is in an up trend, moves down to a green zone and then rejects off it.
+                     if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
+                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
+                        return true;
+                     }
+         
+                 } else if (trend == TREND_DOWN) {
+                     // Red zone
+                     if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
+                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
+                        return true;
+                     }
+         
+                 } else {
+                  // nothing
+         
+                 }
+             }
+             */
+             for (int i = 0; i < executionClass.getZoneCount(); i++) {
+                 ZoneInfo zone = executionClass.getZones(i);
                  
                  // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
                  // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
