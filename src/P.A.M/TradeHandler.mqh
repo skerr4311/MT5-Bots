@@ -20,7 +20,8 @@ class TradeHandler
          TrendClass executionClass;
          TrendDirection trendArrow;
          TrendDirection executionArrow;
-         datetime oncePerBar;
+         datetime oncePerBarExec;
+         datetime oncePerBarTrend;
       
       public:
          // Constructor
@@ -36,7 +37,8 @@ class TradeHandler
             executionClass.SetInitialMarketTrend();
             executionArrow = executionClass.getTrend();
             
-            oncePerBar = getTime(inputExecutionTimeframe, 0);
+            oncePerBarExec = getTime(inputExecutionTimeframe, 0);
+            oncePerBarTrend = getTime(inputExecutionTimeframe, 0);
          }
          
          // ontick fuction()
@@ -51,8 +53,8 @@ class TradeHandler
          //| Check for entry                                                  |
          //+------------------------------------------------------------------+
          void checkForEntry() {
-            datetime current = getTime(inputExecutionTimeframe, 0);
-            if(current != oncePerBar && CalculateSpread() < 3.0) {
+            datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
+            if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
                // check one
                // if(CheckPriceRejection(1, trendClass.getTrend())){
                   // oncePerBar = current;
@@ -60,14 +62,16 @@ class TradeHandler
                // }
                
                // check two
-               // if(CheckTrendDirectionChange()) {
-                  // oncePerBar = current;
-                  // return;
-               // }
-               
-               // check three
+               if(CheckTrendDirectionChange()) {
+                  currentExecTime = currentExecTime;
+                  return;
+               }
+            }
+            
+            datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
+            if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
                if (CheckRejectionOffEma()) {
-                  oncePerBar = current;
+                  oncePerBarTrend = currentTrendTime;
                   return;
                }
             }
@@ -101,18 +105,19 @@ class TradeHandler
             double fiftyEMA = GetEMAForBar(1, inputTrendTimeframe, 50);
             TrendDirection trend = trendClass.getTrend();
             CandleInfo prevCandle = getCandleInfo(inputTrendTimeframe, 1);
+            CandleInfo currentCandle = getCandleInfo(inputTrendTimeframe, 0);
             
             if (EnumToString(trend) == "Down") {
                // Check for ema rejection
-               if(prevCandle.high >= fiftyEMA && prevCandle.close <= fiftyEMA){
-                  HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 1), getClose(inputTrendTimeframe, 0), "50ema rejection down");
+               if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA){
+                  HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
                   return true;
                }
                
-            } else {
+            } else if (EnumToString(trend) == "Up") {
                // Check for ema rejection
-               if(prevCandle.low <= fiftyEMA && prevCandle.close >= fiftyEMA) {
-                  HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 1), getClose(inputTrendTimeframe, 0), "50ema rejection up");
+               if(prevCandle.low < fiftyEMA && prevCandle.close > fiftyEMA) {
+                  HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema rejection up");
                   return true;
                }
             }

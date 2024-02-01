@@ -235,7 +235,7 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
 //+------------------------------------------------------------------+
 double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
     double pipSize;
-    int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+    long digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
     
     // For JPY pairs, a pip is the second decimal place (0.01), otherwise it's the fourth decimal place (0.0001)
     pipSize = (StringFind(symbol, "JPY") > -1) ? 0.01 : 0.0001;
@@ -284,7 +284,7 @@ double CalculatePipDistance(double price1, double price2) {
 //| Calculate take profit                                            |
 //+------------------------------------------------------------------+
 double CalculateTakeProfit(double entryPrice, double stopLoss, double riskRewardRatio, bool isBuy) {
-    int digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
+    long digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
     double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;  // Adjust pip size for JPY pairs
 
     // Calculate the distance between entry price and stop loss in pips
@@ -326,7 +326,7 @@ double CalculateSpread() {
 
     // Determine the pip size
     double pipSize = SymbolInfoDouble(Symbol(), SYMBOL_POINT);
-    int digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
+    long digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
     if (digits == 3 || digits == 5) {
         pipSize *= 10; // For JPY pairs and pairs with 5 decimal places
     }
@@ -348,11 +348,13 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    Print("Price: ", DoubleToString(price));
    Print("Stop loss: ", DoubleToString(priceOffset));
    
-   double pips = CalculatePipDistance(priceOffset, price);
-   Print("Pips: ", (string)pips);
+   double stoplossInPips = CalculatePipDistance(priceOffset, price);
+   Print("stoplossInPips: ", (string)stoplossInPips);
+   
+   if (stoplossInPips > maxPips || stoplossInPips < minPips) {return; }
    
    double lotSize;
-   if(!CalculatePositionSize(risk_percent, pips, lotSize)) {return; }
+   if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {return; }
    Print("lot size: ", (string)lotSize);
    
    double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");
