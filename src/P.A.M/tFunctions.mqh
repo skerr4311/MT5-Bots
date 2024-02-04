@@ -281,6 +281,20 @@ double CalculatePipDistance(double price1, double price2) {
 }
 
 //+------------------------------------------------------------------+
+//| Adjust price by pip size                                         |
+//+------------------------------------------------------------------+
+double AdjustPriceByPipSize(double price, int pips, PipActionTypes action ) {
+    long digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
+    double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;
+    
+    if (action == ADD) {
+      return price + (pipSize * pips);
+    }
+    
+    return price - (pipSize * pips);
+}
+
+//+------------------------------------------------------------------+
 //| Calculate take profit                                            |
 //+------------------------------------------------------------------+
 double CalculateTakeProfit(double entryPrice, double stopLoss, double riskRewardRatio, bool isBuy) {
@@ -354,7 +368,10 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    if (stoplossInPips > maxPips || stoplossInPips < minPips) {return; }
    
    double lotSize;
-   if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {return; }
+   if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {
+      Print("Failed to calculate position size!");
+      return;
+    }
    Print("lot size: ", (string)lotSize);
    
    double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");

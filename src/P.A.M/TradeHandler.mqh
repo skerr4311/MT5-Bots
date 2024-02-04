@@ -9,6 +9,7 @@
 //+------------------------------------------------------------------+
 #include "TrendClass.mqh"
 #include "tFunctions.mqh"
+#include "KillZoneClass.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -22,6 +23,7 @@ class TradeHandler
          TrendDirection executionArrow;
          datetime oncePerBarExec;
          datetime oncePerBarTrend;
+         KillZone londonKZ;
       
       public:
          // Constructor
@@ -39,6 +41,8 @@ class TradeHandler
             
             oncePerBarExec = getTime(inputExecutionTimeframe, 0);
             oncePerBarTrend = getTime(inputExecutionTimeframe, 0);
+            
+            londonKZ.init(inputExecutionTimeframe, LONDON);
          }
          
          // ontick fuction()
@@ -46,6 +50,7 @@ class TradeHandler
             trendClass.HandleTrend();
             executionClass.HandleTrend();
             checkForEntry();
+            londonKZ.OnTick();
             UpdateInfoBox();
          }
          
@@ -90,8 +95,8 @@ class TradeHandler
          //+------------------------------------------------------------------+
          void UpdateInfoBox() {
              Comment(EA_Name, 
-             "\nTrend Direction: ", EnumToString(trendArrow), 
-             "\nExecute Direction: ", EnumToString(executionArrow),
+             "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
+             "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
              "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
              "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
@@ -194,6 +199,8 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
+                        DrawHorizontalLineWithLabel(zone.top, clrGreen, 0, "top");
+                        DrawHorizontalLineWithLabel(zone.bottom, clrGreen, 0, "bottom");
                         HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
@@ -201,6 +208,8 @@ class TradeHandler
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
+                        DrawHorizontalLineWithLabel(zone.top, clrRed, 0, "top");
+                        DrawHorizontalLineWithLabel(zone.bottom, clrRed, 0, "bottom");
                         HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }

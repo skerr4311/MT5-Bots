@@ -64,7 +64,7 @@ public:
        isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
        zoneButtonRectName = "PAM_ToggleZoneRect_" + IntegerToString(timeframe);
        zoneButtonTextName = "PAM_ToggleZoneText_" + IntegerToString(timeframe);
-       isZoneVisible = true; // timeframe == inputTrendTimeframe ? true : false;
+       isZoneVisible = timeframe == inputExecutionTimeframe ? true : false;
        trendButtonRectName = "PAM_ToggleTrendRect_" + IntegerToString(timeframe);
        trendButtonTextName = "PAM_ToggleTrendText_" + IntegerToString(timeframe);
        isTrendVisible = false;
