@@ -130,6 +130,30 @@ void DrawKillZone(datetime startTime, datetime endTime, string killZoneName, dou
         ObjectMove(0, killZoneName, 0, startTime, priceTop);
         ObjectMove(0, killZoneName, 1, endTime, priceBottom);
      }
+     
+     // Additional code to add or update text on top of the rectangle
+     string textName = killZoneName + "_text"; // Unique name for the text object
+     datetime middleTime = startTime + (endTime - startTime) / 3; // Calculate the middle time
+     
+     if(ObjectFind(0, textName) == -1) {
+        // Create the text object if it doesn't exist
+        if(!ObjectCreate(0, textName, OBJ_TEXT, 0, middleTime, priceTop)) {
+            Print("Failed to create text object: ", GetLastError());
+            return;
+        }
+        ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(killZoneType)); // Set the text to kill zone type or any specific name
+        ObjectSetInteger(0, textName, OBJPROP_COLOR, KillZoneToColor(killZoneType)); // Set text color
+        ObjectSetInteger(0, textName, OBJPROP_FONTSIZE, 10); // Set font size as needed
+        ObjectSetString(0, textName, OBJPROP_FONT, "Arial"); // Set font type as needed
+        ObjectSetInteger(0, textName, OBJPROP_BACK, true); // Ensure text is always visible
+        ObjectSetInteger(0, textName, OBJPROP_SELECTABLE, false); // Make it non-selectable
+        ObjectSetInteger(0, textName, OBJPROP_SELECTED, false); // Unselect it
+     } else {
+        // If the text object exists, move it to the new location
+        ObjectMove(0, textName, 0, middleTime, priceTop);
+        // Optionally, update the text if the kill zone type changes
+        ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(killZoneType));
+     }
 }
 
 //+------------------------------------------------------------------+

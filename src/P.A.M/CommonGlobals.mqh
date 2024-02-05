@@ -86,7 +86,7 @@ enum KillZoneTypes {
 };
 
 //+------------------------------------------------------------------+
-//| EnumToString function for TrendDirection enum                    |
+//| ENUM KILLZONE TO COLOR                                           |
 //+------------------------------------------------------------------+
 color KillZoneToColor(KillZoneTypes kz) {
     switch(kz) {
@@ -98,6 +98,17 @@ color KillZoneToColor(KillZoneTypes kz) {
             return clrYellowGreen;
         default:
             return clrAliceBlue;
+    }
+}
+//+------------------------------------------------------------------+
+//| ENU KILLZONE TO TEXT                                             |
+//+------------------------------------------------------------------+
+string KillZoneTypeToString(KillZoneTypes killZoneType) {
+    switch(killZoneType) {
+        case LONDON: return "London KZ";
+        case NEW_YORK: return "New York KZ";
+        case ASIAN: return "Asian KZ";
+        default: return "Kill Zone";
     }
 }
 //+------------------------------------------------------------------+
