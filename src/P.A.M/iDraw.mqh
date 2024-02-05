@@ -109,6 +109,30 @@ void DrawZone(datetime startTime, string zoneName, double priceTop, double price
 }
 
 //+------------------------------------------------------------------+
+//| Draw new kill zone                                                    |
+//+------------------------------------------------------------------+
+void DrawKillZone(datetime startTime, datetime endTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
+     if (ObjectFind(0, killZoneName) == -1) {
+        // Create the rectangle if it doesn't exist
+        if(!ObjectCreate(0, killZoneName, OBJ_RECTANGLE, 0, startTime, priceTop, endTime, priceBottom)) {
+            Print("Failed to create rectangle: ", GetLastError());
+            return;
+        }
+   
+        // Set properties of the rectangle (color, style, etc.)
+        ObjectSetInteger(0, killZoneName, OBJPROP_STYLE, STYLE_DOT);
+        ObjectSetInteger(0, killZoneName, OBJPROP_COLOR, KillZoneToColor(killZoneType));
+        ObjectSetInteger(0, killZoneName, OBJPROP_FILL, false);
+        ObjectSetInteger(0, killZoneName, OBJPROP_BACK, false); // Set to false if you don't want it in the background
+        ObjectSetInteger(0, killZoneName, OBJPROP_SELECTABLE, false);
+        ObjectSetInteger(0, killZoneName, OBJPROP_SELECTED, false);
+     } else {
+        ObjectMove(0, killZoneName, 0, startTime, priceTop);
+        ObjectMove(0, killZoneName, 1, endTime, priceBottom);
+     }
+}
+
+//+------------------------------------------------------------------+
 //| Draw Trend arrow                                                 |
 //+------------------------------------------------------------------+
 void DrawTrendArrow(datetime time, string name, double price, TrendDirection trend) {

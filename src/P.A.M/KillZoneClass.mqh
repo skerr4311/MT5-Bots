@@ -10,6 +10,7 @@ class KillZone {
     bool isInKillZone;
     string kzStart;
     string kzEnd;
+    KillZoneTypes killZoneType;
     
   public:
     // Constructor
@@ -22,6 +23,7 @@ class KillZone {
       isInKillZone = false;
       kzStart = start;
       kzEnd = end;
+      killZoneType = killZone;
     }
     
     //+------------------------------------------------------------------+
@@ -40,57 +42,10 @@ class KillZone {
       string boxName = boxNamePrefix + TimeToString(today, TIME_DATE);
       
       if (isInKillZone) {
-        double highestHigh = 0, lowestLow = DBL_MAX;
-        UpdateKillZone(boxName, startTime, endTime, highestHigh, lowestLow, currentTime);
-      } else {
-        FinalizeKillZone(boxName, endTime);
+         HighLowTimeframe response = GetLowestPriceFromStartTime(TimeFrame, startTime);
+         DrawKillZone(startTime, endTime, boxName, response.high, response.low, killZoneType); 
       }
       
       return isInKillZone;
-    }
-    
-  private:
-    // Update or create the kill zone box
-    void UpdateKillZone(string boxName, datetime startTime, datetime endTime, double &highestHigh, double &lowestLow, datetime currentTime) {
-      for (int i = 0; i < Bars(_Symbol, TimeFrame); i++) {
-        datetime barTime = iTime(_Symbol, TimeFrame, i);
-        if (barTime >= startTime && barTime <= currentTime) {
-          highestHigh = MathMax(highestHigh, iHigh(_Symbol, TimeFrame, i));
-          lowestLow = MathMin(lowestLow, iLow(_Symbol, TimeFrame, i));
-        }
-      }
-      
-      DrawOrUpdateBox(boxName, startTime, highestHigh, lowestLow, currentTime);
-    }
-    
-    // Draw or update the rectangle object
-    void DrawOrUpdateBox(string boxName, datetime startTime, double highestHigh, double lowestLow, datetime currentTime) {
-      if (ObjectFind(0, boxName) == -1) {
-        if (!ObjectCreate(0, boxName, OBJ_RECTANGLE_LABEL, 0, startTime, highestHigh, currentTime, lowestLow))
-          Print("Failed to create box object. Error code: ", GetLastError());
-      } else {
-        ObjectMove(0, boxName, 0, startTime, highestHigh);
-        ObjectMove(0, boxName, 1, currentTime, lowestLow);
-      }
-      
-      ObjectSetInteger(0, boxName, OBJPROP_COLOR, clrDodgerBlue);
-      ObjectSetInteger(0, boxName, OBJPROP_STYLE, STYLE_SOLID);
-      ObjectSetInteger(0, boxName, OBJPROP_WIDTH, 2);
-      ObjectSetInteger(0, boxName, OBJPROP_BACK, true);
-      ObjectSetInteger(0, boxName, OBJPROP_SELECTABLE, false);
-      ObjectSetInteger(0, boxName, OBJPROP_SELECTED, false);
-    }
-    
-    // Finalize the kill zone box after the end time
-    void FinalizeKillZone(string boxName, datetime endTime) {
-      if (ObjectFind(0, boxName) != -1) {
-        double boxEndTime;
-        // ObjectGetDouble(0, boxName, OBJPROP_TIME2, boxEndTime);
-        if (boxEndTime != endTime) {
-          double boxLow;
-          // ObjectGetDouble(0, boxName, OBJPROP_PRICE2, boxLow);
-          ObjectMove(0, boxName, 1, endTime, boxLow);
-        }
-      }
     }
 };

@@ -91,3 +91,28 @@ bool isNewYorkInitiated() {
 bool isAsiaInitiated() {
    return AsianKzStart != "00:00" && AsianKzEnd != "00:00";
 }
+
+// Function to get the lowest price from a given start time within a specific timeframe
+HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime startTime) {
+    // Find the bar index for the given start time
+    int startBarIndex = iBarShift(Symbol(), timeframe, startTime, true);
+    
+    // Check if startBarIndex is valid
+    if(startBarIndex == -1) {
+        Print("Error: Start time is beyond the available data.");
+    }
+    
+    HighLowTimeframe response;
+    response.low = getLow(timeframe, 0);
+    response.high = getHigh(timeframe, 0);
+    
+    for(int i = startBarIndex; i > 0; i--) {
+      double high = getHigh(timeframe, i);
+      double low = getLow(timeframe, i);
+      
+      response.high = high > response.high ? high : response.high;
+      response.low = low < response.low ? low : response.low;
+    }
+    
+    return response;
+}

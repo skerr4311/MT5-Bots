@@ -50,6 +50,14 @@ struct CandleInfo {
    double close;
    bool isBull;
 };
+
+//+------------------------------------------------------------------+
+//| High and low of given timeframe                                  |
+//+------------------------------------------------------------------+
+struct HighLowTimeframe {
+   double high;
+   double low;
+};
 //+------------------------------------------------------------------+
 //| Position Types                                                   |
 //+------------------------------------------------------------------+
@@ -76,6 +84,22 @@ enum KillZoneTypes {
    NEW_YORK,
    ASIAN
 };
+
+//+------------------------------------------------------------------+
+//| EnumToString function for TrendDirection enum                    |
+//+------------------------------------------------------------------+
+color KillZoneToColor(KillZoneTypes kz) {
+    switch(kz) {
+        case LONDON:
+            return clrDeepPink;
+        case NEW_YORK:
+            return clrBlueViolet;
+        case ASIAN:
+            return clrYellowGreen;
+        default:
+            return clrAliceBlue;
+    }
+}
 //+------------------------------------------------------------------+
 //| EnumToString function for PositionType enum                      |
 //+------------------------------------------------------------------+
