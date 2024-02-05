@@ -57,6 +57,9 @@ double isBearCandle(ENUM_TIMEFRAMES timeframe, int candleId) {
    return close > open;
 }
 
+//+------------------------------------------------------------------+
+//| get candle info                                                  |
+//+------------------------------------------------------------------+
 CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
    CandleInfo info;
    info.close = getClose(timeframe, candleId);
@@ -66,4 +69,25 @@ CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
    info.open = getOpen(timeframe, candleId);
 
    return info;
+}
+
+//+------------------------------------------------------------------+
+//| isLondonInitiated                                                |
+//+------------------------------------------------------------------+
+bool isLondonInitiated() {
+   return londonKzStart != "00:00" && londonKzEnd != "00:00";
+}
+
+//+------------------------------------------------------------------+
+//| isNewYorkInitiated                                               |
+//+------------------------------------------------------------------+
+bool isNewYorkInitiated() {
+   return NewYorkKzStart != "00:00" && NewYorkKzEnd != "00:00";
+}
+
+//+------------------------------------------------------------------+
+//| isAsiaInitiated                                                  |
+//+------------------------------------------------------------------+
+bool isAsiaInitiated() {
+   return AsianKzStart != "00:00" && AsianKzEnd != "00:00";
 }

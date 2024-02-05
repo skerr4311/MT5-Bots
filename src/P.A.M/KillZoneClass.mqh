@@ -8,34 +8,33 @@ class KillZone {
     ENUM_TIMEFRAMES TimeFrame;
     string boxNamePrefix;
     bool isInKillZone;
+    string kzStart;
+    string kzEnd;
     
   public:
     // Constructor
     KillZone() {}
     
     //Initiate
-    void init(ENUM_TIMEFRAMES tf, KillZoneTypes killZone) {
+    void init(ENUM_TIMEFRAMES tf, KillZoneTypes killZone, string start, string end) {
       TimeFrame = tf;
       boxNamePrefix = killZone + "_KillZone_";
       isInKillZone = false;
+      kzStart = start;
+      kzEnd = end;
     }
     
-    // Called on each tick
-    void OnTick() {
+    //+------------------------------------------------------------------+
+    //| isInZillZone                                                     |
+    //+------------------------------------------------------------------+
+    bool isInZillZone() {
       datetime currentTime = TimeCurrent();
       datetime today = D'1970.01.01' + (currentTime / 86400) * 86400;
-      datetime startTime = StringToTime("09:30");
-      datetime endTime = StringToTime("12:30");
+      datetime startTime = StringToTime(kzStart);
+      datetime endTime = StringToTime(kzEnd);
       
       // Check if current time is within the kill zone
       isInKillZone = currentTime >= startTime && currentTime <= endTime;
-      
-      Print("current time: ", currentTime);
-      Print("today: ", today);
-      Print("start time: ", startTime);
-      Print("end time: ", endTime);
-      
-      Print("isInKillZone: ", isInKillZone);
       
       // Construct unique box name for today
       string boxName = boxNamePrefix + TimeToString(today, TIME_DATE);
@@ -46,6 +45,8 @@ class KillZone {
       } else {
         FinalizeKillZone(boxName, endTime);
       }
+      
+      return isInKillZone;
     }
     
   private:

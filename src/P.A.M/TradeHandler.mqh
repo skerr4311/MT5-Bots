@@ -10,6 +10,7 @@
 #include "TrendClass.mqh"
 #include "tFunctions.mqh"
 #include "KillZoneClass.mqh"
+#include "iFunctions.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -23,7 +24,11 @@ class TradeHandler
          TrendDirection executionArrow;
          datetime oncePerBarExec;
          datetime oncePerBarTrend;
+         datetime oncePerBarKillZone;
          KillZone londonKZ;
+         KillZone newYorkKZ;
+         KillZone asianKZ;
+         bool isInKillZone;
       
       public:
          // Constructor
@@ -42,43 +47,89 @@ class TradeHandler
             oncePerBarExec = getTime(inputExecutionTimeframe, 0);
             oncePerBarTrend = getTime(inputExecutionTimeframe, 0);
             
-            londonKZ.init(inputExecutionTimeframe, LONDON);
+            isInKillZone = false;
+            
+            initKillZones();
          }
          
-         // ontick fuction()
+         //+------------------------------------------------------------------+
+         //| init Kill Zones                                                  |
+         //+------------------------------------------------------------------+
+         void initKillZones() {
+            if(isLondonInitiated()) {
+               londonKZ.init(inputExecutionTimeframe, LONDON, londonKzStart, londonKzEnd);
+            }
+            
+            if(isNewYorkInitiated()) {
+               newYorkKZ.init(inputExecutionTimeframe, NEW_YORK, NewYorkKzStart, NewYorkKzEnd);
+            }
+            
+            if(isAsiaInitiated()) {
+               asianKZ.init(inputExecutionTimeframe, ASIAN, AsianKzStart, AsianKzEnd);
+            }
+         }
+         //+------------------------------------------------------------------+
+         //| ontick fuction()                                                 |
+         //+------------------------------------------------------------------+
          void OnTick() {
             trendClass.HandleTrend();
             executionClass.HandleTrend();
+            CheckIfInKillZone();
             checkForEntry();
-            londonKZ.OnTick();
             UpdateInfoBox();
+         }
+         
+         //+------------------------------------------------------------------+
+         //| Check If In Kill Zone                                            |
+         //+------------------------------------------------------------------+
+         void CheckIfInKillZone() {
+            datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
+            if(currentExecTime != oncePerBarKillZone) {
+               bool isOneKillZoneActive = false;
+               if(isLondonInitiated() && londonKZ.isInZillZone()){
+                  isOneKillZoneActive = true;
+               }
+               
+               if(isNewYorkInitiated() && newYorkKZ.isInZillZone()) {
+                  isOneKillZoneActive = true;
+               }
+               
+               if(isAsiaInitiated() && asianKZ.isInZillZone()) {
+                  isOneKillZoneActive = true;
+               }
+            
+               isInKillZone = isOneKillZoneActive;
+               oncePerBarKillZone = currentExecTime;
+            }
          }
          
          //+------------------------------------------------------------------+
          //| Check for entry                                                  |
          //+------------------------------------------------------------------+
          void checkForEntry() {
-            datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
-            if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
-               // check one
-               if(CheckPriceRejection(1, trendClass.getTrend())){
-                  oncePerBarExec = currentExecTime;
-                  return;
+            if(isInKillZone) {
+               datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
+               if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
+                  // check one
+                  if(CheckPriceRejection(1, trendClass.getTrend())){
+                     oncePerBarExec = currentExecTime;
+                     return;
+                  }
+                  
+                  // check two
+                  // if(CheckTrendDirectionChange()) {
+                     // currentExecTime = currentExecTime;
+                     // return;
+                  // }
                }
                
-               // check two
-               // if(CheckTrendDirectionChange()) {
-                  // currentExecTime = currentExecTime;
-                  // return;
-               // }
-            }
-            
-            datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
-            if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
-               // if (CheckRejectionOffEma()) {
-                  // oncePerBarTrend = currentTrendTime;
-                  // return;
-               // }
+               datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
+               if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
+                  // if (CheckRejectionOffEma()) {
+                     // oncePerBarTrend = currentTrendTime;
+                     // return;
+                  // }
+               }
             }
          }
          

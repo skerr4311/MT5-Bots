@@ -7,11 +7,16 @@
 input ENUM_TIMEFRAMES inputTrendTimeframe = PERIOD_H1; // Trend timeframe
 input ENUM_TIMEFRAMES inputExecutionTimeframe = PERIOD_M15; // Execution timeframe
 input double risk_percent = 0.01; // Risk %
+input string londonKzStart = "09:30"; // London KZ Start
+input string londonKzEnd = "12:00"; // London KZ End
+input string NewYorkKzStart = "15:00"; // NewYork KZ Start
+input string NewYorkKzEnd = "17:30"; // NewYork KZ End
+input string AsianKzStart = "00:00"; // Asian KZ Start
+input string AsianKzEnd = "00:00"; // Asian KZ End
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
 //+------------------------------------------------------------------+
-
 enum TrendDirection
   {
    TREND_NONE = 0,
