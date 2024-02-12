@@ -19,7 +19,7 @@ class KillZone {
     //Initiate
     void init(ENUM_TIMEFRAMES tf, KillZoneTypes killZone, string start, string end) {
       TimeFrame = tf;
-      boxNamePrefix = killZone + "_KillZone_";
+      boxNamePrefix = "PAM_" + killZone + "_KillZone_";
       isInKillZone = false;
       kzStart = start;
       kzEnd = end;
