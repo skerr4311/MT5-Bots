@@ -110,17 +110,25 @@ class TradeHandler
             if(isInKillZone) {
                datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
                if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
+                  /*
                   // check one
                   if(CheckPriceRejection(1, trendClass.getTrend())){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
                   
+                  
                   // check two
-                  // if(CheckTrendDirectionChange()) {
-                     // currentExecTime = currentExecTime;
-                     // return;
-                  // }
+                  if(CheckTrendDirectionChange()) {
+                     currentExecTime = currentExecTime;
+                     return;
+                  }
+                  */
+                  // check three
+                  if(CheckRejectionOffEma()){
+                     oncePerBarExec = currentExecTime;
+                     return;
+                  }
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
@@ -158,10 +166,11 @@ class TradeHandler
          //| Check rejection off EMA                                          |
          //+------------------------------------------------------------------+
          bool CheckRejectionOffEma() {
-            double fiftyEMA = GetEMAForBar(1, inputTrendTimeframe, 50);
+            double fiftyEMA = GetEMAForBar(0, inputTrendTimeframe, 50);
             TrendDirection trend = trendClass.getTrend();
-            CandleInfo prevCandle = getCandleInfo(inputTrendTimeframe, 1);
-            CandleInfo currentCandle = getCandleInfo(inputTrendTimeframe, 0);
+            CandleInfo prevprevCandle = getCandleInfo(inputExecutionTimeframe, 2);
+            CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
+            CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             
             if (EnumToString(trend) == "Down") {
                // Check for ema rejection
@@ -172,9 +181,18 @@ class TradeHandler
                
             } else if (EnumToString(trend) == "Up") {
                // Check for ema rejection
-               if(prevCandle.low < fiftyEMA && prevCandle.close > fiftyEMA) {
-                  HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema rejection up");
-                  return true;
+               if (prevprevCandle.high < fiftyEMA && prevCandle.close < fiftyEMA) {
+                  // looking for rejection
+                  if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA) {
+                     HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection up");
+                     return true;
+                  }
+               } else {
+                  // looking for continuation
+                  if(prevCandle.low < fiftyEMA && prevCandle.close > fiftyEMA) {
+                     HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
+                     return true;
+                  }
                }
             }
             

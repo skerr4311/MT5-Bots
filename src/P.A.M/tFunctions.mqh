@@ -191,15 +191,12 @@ string GetAccountCurrency()
   }
 
 //+------------------------------------------------------------------+
-//| Calvulate position size                                          |
+//| Calculate position size                                          |
 //+------------------------------------------------------------------+
 double CalculatePositionSize(double riskPercentage, double stopLossPips, double &positionSize) {
     double accountBalance = AccountInfoDouble(ACCOUNT_BALANCE);
     string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
     double riskAmount = accountBalance * riskPercentage;
-
-    Print("Account Balance: $", accountBalance);
-    Print("Risk Amount: $", riskAmount);
 
     double pipValue = CalculatePipValueInAccountCurrency(Symbol(), accountCurrency);
     Print("Pip Value: $", pipValue);
@@ -223,9 +220,6 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
     positionSize = MathMin(MathMax(positionSize, minVolume), maxVolume);
 
     Print("Normalized Position Size: ", positionSize, " lots");
-    Print("Lot Step: ", lotStep);
-    Print("Min Volume: ", minVolume);
-    Print("Max Volume: ", maxVolume);
 
     return positionSize;
 }
@@ -234,28 +228,38 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
 //| Calculate pip value in account currency                          |
 //+------------------------------------------------------------------+
 double CalculatePipValueInAccountCurrency(string symbol, string accountCurrency) {
-    double pipSize;
-    long digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
-    
-    // For JPY pairs, a pip is the second decimal place (0.01), otherwise it's the fourth decimal place (0.0001)
-    pipSize = (StringFind(symbol, "JPY") > -1) ? 0.01 : 0.0001;
-
-    // Calculate the value of a pip in the quote currency
+    double pipValue = 0.0;
+    double exchangeRate = SymbolInfoDouble(symbol, SYMBOL_ASK);
+    int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+    string baseCurrency = StringSubstr(symbol, 0, 3);
+    string quoteCurrency = StringSubstr(symbol, StringLen(symbol) - 3);
     double contractSize = SymbolInfoDouble(symbol, SYMBOL_TRADE_CONTRACT_SIZE);
-    double pipValue = pipSize * contractSize;
+
+    // Determine pip size based on the currency pair
+    double pipSize = (digits == 3 || digits == 5) ? 0.0001 : 0.01;
+
+    // Calculate the pip value in the quote currency
+    pipValue = (quoteCurrency == "JPY" || digits == 3) ? pipSize * contractSize * 0.01 : pipSize * contractSize;
 
     // Convert pip value to account currency if necessary
-    string quoteCurrency = StringSubstr(symbol, StringLen(symbol) - 3);
-    if(accountCurrency != quoteCurrency) {
-        string conversionSymbol = (accountCurrency == "USD" || quoteCurrency == "USD") ? 
-                                  accountCurrency + quoteCurrency : quoteCurrency + "/" + accountCurrency;
+    if(quoteCurrency != accountCurrency) {
+        // Direct conversion for USD involved pairs
+        if(accountCurrency == "USD" || quoteCurrency == "USD") {
+            string conversionSymbol = (quoteCurrency == "USD") ? baseCurrency + "USD" : "USD" + quoteCurrency;
+            double conversionRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
+            pipValue = (quoteCurrency == "USD") ? pipValue / conversionRate : pipValue * conversionRate;
+        }
+        // Indirect conversion for non-USD pairs
+        else {
+            // Convert from quote to USD
+            string quoteToUSD = quoteCurrency + "USD";
+            double quoteToUSDConversionRate = SymbolInfoDouble(quoteToUSD, SYMBOL_ASK);
+            double pipValueInUSD = pipValue / quoteToUSDConversionRate;
 
-        if (SymbolInfoDouble(conversionSymbol, SYMBOL_ASK) > 0) {
-            double exchangeRate = SymbolInfoDouble(conversionSymbol, SYMBOL_ASK);
-            pipValue = (accountCurrency == "USD" || quoteCurrency == "USD") ? pipValue / exchangeRate : pipValue * exchangeRate;
-        } else {
-            Print("Error: Unable to find exchange rate for ", conversionSymbol);
-            return 0; // Handle this error appropriately
+            // Convert from USD to account currency
+            string usdToAccountCurrency = "USD" + accountCurrency;
+            double usdToAccountCurrencyRate = SymbolInfoDouble(usdToAccountCurrency, SYMBOL_ASK);
+            pipValue = pipValueInUSD * usdToAccountCurrencyRate;
         }
     }
 
@@ -353,20 +357,72 @@ double CalculateSpread() {
 }
 
 //+------------------------------------------------------------------+
+//| Get required margin for a given lot size in account currency     |
+//+------------------------------------------------------------------+
+double getRequiredMargin(double lotSize) {
+    string currentPair = Symbol();
+    int leverage = AccountInfoInteger(ACCOUNT_LEVERAGE);
+    string accountCurrency = AccountInfoString(ACCOUNT_CURRENCY);
+    double contractSize = SymbolInfoDouble(currentPair, SYMBOL_TRADE_CONTRACT_SIZE);
+    
+    // Extract base and quote currencies from the symbol
+    string baseCurrency = StringSubstr(currentPair, 0, 3);
+    string quoteCurrency = StringSubstr(currentPair, StringLen(currentPair) - 3);
+
+    // Initial required margin calculation in the base currency
+    double requiredMarginBaseCurrency = (lotSize * contractSize) / leverage;
+
+    // If the account currency matches the base currency, no conversion is needed
+    if(accountCurrency == baseCurrency) {
+        return requiredMarginBaseCurrency;
+    }
+
+    // Conversion rate to account currency
+    double conversionRate = 1.0; // Default to 1.0 for direct matches
+
+    // If the account currency is the same as the quote currency
+    if(accountCurrency == quoteCurrency) {
+        // Convert required margin from base to quote currency using the current price
+        double price = SymbolInfoDouble(currentPair, SYMBOL_BID); // Use bid price for selling
+        conversionRate = price;
+    } else {
+        // If account currency differs from both base and quote currency, find conversion rate
+        string conversionPairBase = baseCurrency + accountCurrency; // Base to Account
+        string conversionPairQuote = quoteCurrency + accountCurrency; // Quote to Account
+        
+        if(SymbolInfoDouble(conversionPairBase, SYMBOL_BID) > 0) {
+            Print("if!!!!!");
+            conversionRate = SymbolInfoDouble(conversionPairBase, SYMBOL_BID);
+        } else if(SymbolInfoDouble(conversionPairQuote, SYMBOL_BID) > 0) {
+            Print("else!!!!");
+            conversionRate = 1.0 / SymbolInfoDouble(conversionPairQuote, SYMBOL_ASK); // Use ask price for buying
+        } else {
+            Print("Error: Unable to find a suitable conversion rate.");
+            return -1; // Error handling
+        }
+    }
+
+    // Convert the required margin to the account currency
+    double requiredMarginAccountCurrency = requiredMarginBaseCurrency * conversionRate;
+
+    return requiredMarginAccountCurrency;
+}
+
+
+//+------------------------------------------------------------------+
 //| Handle trade                                                     |
 //+------------------------------------------------------------------+
 void HandleTrade(PositionTypes type, double priceOffset, double price, string message = ""){
    // Check if there is enough equity to take the trade.
-   
-   Print(PositionToString(type));
-   Print("Price: ", DoubleToString(price));
-   Print("Stop loss: ", DoubleToString(priceOffset));
-   
    double stoplossInPips = CalculatePipDistance(priceOffset, price);
    Print("stoplossInPips: ", (string)stoplossInPips);
    
-   if (stoplossInPips > maxPips || stoplossInPips < minPips) {return; }
-   
+   /*
+   if (stoplossInPips > maxPips || stoplossInPips < minPips) {
+      Print("Pips out of range! - pips: ", stoplossInPips);
+      return;  
+   }
+   */
    double lotSize;
    if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {
       Print("Failed to calculate position size!");
@@ -377,7 +433,10 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");
    Print("takeProfit: ", (string)takeProfit);
    
-   Print("Spread: ", (string)CalculateSpread());
+   // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price
+   double requiredEquity = getRequiredMargin(lotSize);
+   
+   Print("Required Equity: ", requiredEquity);
    
    if(enableTrading) {
       if (PositionToString(type) == "Sell Now") {
@@ -388,7 +447,3 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    }
    
 }
-
-
-
-
