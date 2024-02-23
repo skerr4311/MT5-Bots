@@ -86,15 +86,15 @@ class TradeHandler
             datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
             if(currentExecTime != oncePerBarKillZone) {
                bool isOneKillZoneActive = false;
-               if(isLondonInitiated() && londonKZ.isInZillZone()){
+               if(isLondonInitiated() && londonKZ.checkIsInKillZone()){
                   isOneKillZoneActive = true;
                }
                
-               if(isNewYorkInitiated() && newYorkKZ.isInZillZone()) {
+               if(isNewYorkInitiated() && newYorkKZ.checkIsInKillZone()) {
                   isOneKillZoneActive = true;
                }
                
-               if(isAsiaInitiated() && asianKZ.isInZillZone()) {
+               if(isAsiaInitiated() && asianKZ.checkIsInKillZone()) {
                   isOneKillZoneActive = true;
                }
             

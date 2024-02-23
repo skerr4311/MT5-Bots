@@ -417,12 +417,12 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
    double stoplossInPips = CalculatePipDistance(priceOffset, price);
    Print("stoplossInPips: ", (string)stoplossInPips);
    
-   /*
+   
    if (stoplossInPips > maxPips || stoplossInPips < minPips) {
       Print("Pips out of range! - pips: ", stoplossInPips);
       return;  
    }
-   */
+   
    double lotSize;
    if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {
       Print("Failed to calculate position size!");

@@ -153,3 +153,15 @@ struct ZoneInfo {
    TrendDirection trend;
    datetime startTime;
 };
+
+//+------------------------------------------------------------------+
+//| KillZone Type                                                    |
+//+------------------------------------------------------------------+
+struct KillZoneInfo {
+    datetime startTime;
+    datetime endTime;
+    string killZoneName;
+    double priceTop;
+    double priceBottom;
+    KillZoneTypes killZoneType;
+};

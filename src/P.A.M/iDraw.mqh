@@ -111,48 +111,50 @@ void DrawZone(datetime startTime, string zoneName, double priceTop, double price
 //+------------------------------------------------------------------+
 //| Draw new kill zone                                                    |
 //+------------------------------------------------------------------+
-void DrawKillZone(datetime startTime, datetime endTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
-     if (ObjectFind(0, killZoneName) == -1) {
+void DrawKillZone(KillZoneInfo &kz) {
+     if (ObjectFind(0, kz.killZoneName) == -1) {
         // Create the rectangle if it doesn't exist
-        if(!ObjectCreate(0, killZoneName, OBJ_RECTANGLE, 0, startTime, priceTop, endTime, priceBottom)) {
+        if(!ObjectCreate(0, kz.killZoneName, OBJ_RECTANGLE, 0, kz.startTime, kz.priceTop, kz.endTime, kz.priceBottom)) {
             Print("Failed to create rectangle: ", GetLastError());
             return;
         }
    
         // Set properties of the rectangle (color, style, etc.)
-        ObjectSetInteger(0, killZoneName, OBJPROP_STYLE, STYLE_DOT);
-        ObjectSetInteger(0, killZoneName, OBJPROP_COLOR, KillZoneToColor(killZoneType));
-        ObjectSetInteger(0, killZoneName, OBJPROP_FILL, false);
-        ObjectSetInteger(0, killZoneName, OBJPROP_BACK, false); // Set to false if you don't want it in the background
-        ObjectSetInteger(0, killZoneName, OBJPROP_SELECTABLE, false);
-        ObjectSetInteger(0, killZoneName, OBJPROP_SELECTED, false);
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_STYLE, STYLE_DOT);
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_COLOR, KillZoneToColor(kz.killZoneType));
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_FILL, false);
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_BACK, false); // Set to false if you don't want it in the background
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_SELECTABLE, false);
+        ObjectSetInteger(0, kz.killZoneName, OBJPROP_SELECTED, false);
      } else {
-        ObjectMove(0, killZoneName, 0, startTime, priceTop);
-        ObjectMove(0, killZoneName, 1, endTime, priceBottom);
+        ObjectMove(0, kz.killZoneName, 0, kz.startTime, kz.priceTop);
+        ObjectMove(0, kz.killZoneName, 1, kz.endTime, kz.priceBottom);
      }
      
      // Additional code to add or update text on top of the rectangle
-     string textName = killZoneName + "_text"; // Unique name for the text object
-     datetime middleTime = startTime + (endTime - startTime) / 3; // Calculate the middle time
-     
-     if(ObjectFind(0, textName) == -1) {
-        // Create the text object if it doesn't exist
-        if(!ObjectCreate(0, textName, OBJ_TEXT, 0, middleTime, priceTop)) {
-            Print("Failed to create text object: ", GetLastError());
-            return;
+     if (Period() <= 15) {
+        string textName = kz.killZoneName + "_text"; // Unique name for the text object
+        datetime middleTime = kz.startTime + (kz.endTime - kz.startTime) / 3; // Calculate the middle time
+        
+        if(ObjectFind(0, textName) == -1) {
+            // Create the text object if it doesn't exist
+            if(!ObjectCreate(0, textName, OBJ_TEXT, 0, middleTime, kz.priceTop)) {
+                Print("Failed to create text object: ", GetLastError());
+                return;
+            }
+            ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(kz.killZoneType)); // Set the text to kill zone type or any specific name
+            ObjectSetInteger(0, textName, OBJPROP_COLOR, KillZoneToColor(kz.killZoneType)); // Set text color
+            ObjectSetInteger(0, textName, OBJPROP_FONTSIZE, 10); // Set font size as needed
+            ObjectSetString(0, textName, OBJPROP_FONT, "Arial"); // Set font type as needed
+            ObjectSetInteger(0, textName, OBJPROP_BACK, true); // Ensure text is always visible
+            ObjectSetInteger(0, textName, OBJPROP_SELECTABLE, false); // Make it non-selectable
+            ObjectSetInteger(0, textName, OBJPROP_SELECTED, false); // Unselect it
+        } else {
+            // If the text object exists, move it to the new location
+            ObjectMove(0, textName, 0, middleTime, kz.priceTop);
+            // Optionally, update the text if the kill zone type changes
+            ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(kz.killZoneType));
         }
-        ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(killZoneType)); // Set the text to kill zone type or any specific name
-        ObjectSetInteger(0, textName, OBJPROP_COLOR, KillZoneToColor(killZoneType)); // Set text color
-        ObjectSetInteger(0, textName, OBJPROP_FONTSIZE, 10); // Set font size as needed
-        ObjectSetString(0, textName, OBJPROP_FONT, "Arial"); // Set font type as needed
-        ObjectSetInteger(0, textName, OBJPROP_BACK, true); // Ensure text is always visible
-        ObjectSetInteger(0, textName, OBJPROP_SELECTABLE, false); // Make it non-selectable
-        ObjectSetInteger(0, textName, OBJPROP_SELECTED, false); // Unselect it
-     } else {
-        // If the text object exists, move it to the new location
-        ObjectMove(0, textName, 0, middleTime, priceTop);
-        // Optionally, update the text if the kill zone type changes
-        ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(killZoneType));
      }
 }
 
