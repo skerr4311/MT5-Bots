@@ -93,7 +93,7 @@ bool isAsiaInitiated() {
 }
 
 // Function to get the lowest price from a given start time within a specific timeframe
-HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime startTime) {
+HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime startTime, int index) {
     // Find the bar index for the given start time
     int startBarIndex = iBarShift(Symbol(), timeframe, startTime, true);
     
@@ -103,10 +103,10 @@ HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime
     }
     
     HighLowTimeframe response;
-    response.low = getLow(timeframe, 0);
-    response.high = getHigh(timeframe, 0);
+    response.low = getLow(timeframe, index);
+    response.high = getHigh(timeframe, index);
     
-    for(int i = startBarIndex; i > 0; i--) {
+    for(int i = startBarIndex; i > index; i--) {
       double high = getHigh(timeframe, i);
       double low = getLow(timeframe, i);
       

@@ -134,11 +134,11 @@ void DrawKillZone(KillZoneInfo &kz) {
      // Additional code to add or update text on top of the rectangle
      if (Period() <= 15) {
         string textName = kz.killZoneName + "_text"; // Unique name for the text object
-        datetime middleTime = kz.startTime + (kz.endTime - kz.startTime) / 3; // Calculate the middle time
+        datetime textPlacement = kz.startTime; // Calculate the middle time
         
         if(ObjectFind(0, textName) == -1) {
             // Create the text object if it doesn't exist
-            if(!ObjectCreate(0, textName, OBJ_TEXT, 0, middleTime, kz.priceTop)) {
+            if(!ObjectCreate(0, textName, OBJ_TEXT, 0, textPlacement, kz.priceTop)) {
                 Print("Failed to create text object: ", GetLastError());
                 return;
             }
@@ -151,7 +151,7 @@ void DrawKillZone(KillZoneInfo &kz) {
             ObjectSetInteger(0, textName, OBJPROP_SELECTED, false); // Unselect it
         } else {
             // If the text object exists, move it to the new location
-            ObjectMove(0, textName, 0, middleTime, kz.priceTop);
+            ObjectMove(0, textName, 0, textPlacement, kz.priceTop);
             // Optionally, update the text if the kill zone type changes
             ObjectSetString(0, textName, OBJPROP_TEXT, KillZoneTypeToString(kz.killZoneType));
         }

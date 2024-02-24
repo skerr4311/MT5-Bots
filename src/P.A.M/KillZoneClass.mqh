@@ -24,14 +24,14 @@ class KillZone {
    //+------------------------------------------------------------------+
    //| AddKZtoArray                                                     |
    //+------------------------------------------------------------------+
-   void InsertNewKillZone(datetime startTime, datetime endTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
+   void InsertNewKillZone(datetime startTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
       int newSize = ArraySize(killZones) + 1; // Increase array size by one
       ArrayResize(killZones, newSize); // Resize the array
       
       // Create a new KillZoneInfo struct and assign values
       KillZoneInfo newZone;
       newZone.startTime = startTime;
-      newZone.endTime = endTime;
+      newZone.endTime = startTime;
       newZone.killZoneName = killZoneName;
       newZone.priceTop = priceTop;
       newZone.priceBottom = priceBottom;
@@ -44,15 +44,18 @@ class KillZone {
          DrawKillZone(newZone);
       }
    }
+   datetime getLastKzStartTime() {
+      int lastIndex = ArraySize(killZones) - 1; // Get the last index of the array
+      return killZones[lastIndex].startTime;
+   }
    //+------------------------------------------------------------------+
    //| Update Last kill zone                                            |
    //+------------------------------------------------------------------+
-   void UpdateLatestKillZone(datetime startTime, datetime endTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
+   void UpdateLatestKillZone(datetime endTime, string killZoneName, double priceTop, double priceBottom, KillZoneTypes killZoneType) {
       int lastIndex = ArraySize(killZones) - 1; // Get the last index of the array
       
       if(lastIndex >= 0) { // Check if the array is not empty
          // Update the last item
-         killZones[lastIndex].startTime = startTime;
          killZones[lastIndex].endTime = endTime;
          killZones[lastIndex].killZoneName = killZoneName;
          killZones[lastIndex].priceTop = priceTop;
@@ -82,11 +85,11 @@ class KillZone {
     }
     
    //+------------------------------------------------------------------+
-   //| Get Market trend                                                 |
+   //| Draw Past Zones                                                  |
    //+------------------------------------------------------------------+
    void SetInitialMarketTrend() {
       for(int i = lookBack; i >= 1; i--) {
-         Print("not ready yet.");
+         checkIsInKillZone(i);
       }
    }
    
@@ -111,22 +114,29 @@ class KillZone {
    //+------------------------------------------------------------------+
    //| isInKillZone                                                     |
    //+------------------------------------------------------------------+
-   bool checkIsInKillZone() {
-      datetime currentTime = getTime(this.TimeFrame, 0);
-      datetime startTime = StringToTime(kzStart);
-      datetime endTime = StringToTime(kzEnd);
+   bool checkIsInKillZone(int candleId) {
+      datetime candleDateTime = getTime(this.TimeFrame, candleId);
+    
+      // Convert times to datetime for today's date for comparison
+      datetime startDateTime = StringToTime(TimeToString(candleDateTime, TIME_DATE) + " " + kzStart);
+      datetime endDateTime = StringToTime(TimeToString(candleDateTime, TIME_DATE) + " " + kzEnd);
+
+      // Extract just the time part by subtracting the date part
+      datetime candleTimeOnly = candleDateTime - (candleDateTime - (candleDateTime % 86400));
+      datetime startTimeOnly = startDateTime - (startDateTime - (startDateTime % 86400));
+      datetime endTimeOnly = endDateTime - (endDateTime - (endDateTime % 86400));
+
       string killZoneName = boxNamePrefix + IntegerToString(killZoneCount);
    
       // Check if current time is within the kill zone
-      isInKillZone = currentTime >= startTime && currentTime <= endTime;
+      isInKillZone = candleTimeOnly >= startTimeOnly && candleTimeOnly <= endTimeOnly;
       
       if(isInKillZone && !isDrawingStarted) {
          isDrawingStarted = true;
-         HighLowTimeframe response = GetLowestPriceFromStartTime(TimeFrame, startTime);
-         InsertNewKillZone(startTime, endTime, killZoneName, response.high, response.low, killZoneType);
+         InsertNewKillZone(candleDateTime, killZoneName, getHigh(this.TimeFrame, candleId), getLow(this.TimeFrame, candleId), killZoneType);
       } else if(isInKillZone && isDrawingStarted) {
-         HighLowTimeframe response = GetLowestPriceFromStartTime(TimeFrame, startTime);
-         UpdateLatestKillZone(startTime, endTime, killZoneName, response.high, response.low, killZoneType);
+         HighLowTimeframe response = GetLowestPriceFromStartTime(TimeFrame, getLastKzStartTime(), candleId);
+         UpdateLatestKillZone(candleDateTime, killZoneName, response.high, response.low, killZoneType);
       } else if(!isInKillZone && isDrawingStarted) {
          // finalize item complete
          killZoneCount++;

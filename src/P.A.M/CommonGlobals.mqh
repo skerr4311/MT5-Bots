@@ -105,9 +105,9 @@ color KillZoneToColor(KillZoneTypes kz) {
 //+------------------------------------------------------------------+
 string KillZoneTypeToString(KillZoneTypes killZoneType) {
     switch(killZoneType) {
-        case LONDON: return "London KZ";
-        case NEW_YORK: return "New York KZ";
-        case ASIAN: return "Asian KZ";
+        case LONDON: return "London";
+        case NEW_YORK: return "New York";
+        case ASIAN: return "Asian";
         default: return "Kill Zone";
     }
 }

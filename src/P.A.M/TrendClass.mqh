@@ -339,21 +339,40 @@ public:
       //| Initialize Buttons                                               |
       //+------------------------------------------------------------------+  
       void CreateButton() {
-          int buttonHeight = 30;
-          long yOffset = trendTimeframe == inputTrendTimeframe ? ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2 : buttonHeight;
-          int spacing = 10;  // Space between buttons
+         int buttonHeight = 30;
+         long midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
+         long yOffset = trendTimeframe == inputTrendTimeframe ? midScreenPoint : midScreenPoint - buttonHeight;
+         int spacing = 10;
       
-          // Create the first button (EMA Toggle)
-          CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend EMA" : "Exec EMA", yOffset - 11, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend" : "Execution", yOffset, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
+      }
+
+      //+------------------------------------------------------------------+
+      //| Initialize Buttons Container                                     |
+      //+------------------------------------------------------------------+  
+      void CreateButtonsContainer() {
+         int buttonHeight = 30;
+         long midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
+         long yOffset = trendTimeframe == inputTrendTimeframe ? midScreenPoint : midScreenPoint - buttonHeight;
+         int spacing = 10;
       
-          // Create the second button 10px below the first button
-          CreateSingleButton(zoneButtonRectName, zoneButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Zones" : "Exec Zones", yOffset - 11 + buttonHeight + spacing, isZoneVisible ? clrDarkGreen : clrBlue, isZoneVisible ? clrGreen : clrDodgerBlue, clrWhite);
-          
-          // Create the second button 10px below the second button
-          CreateSingleButton(trendButtonRectName, trendButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Trend" : "Exec Trend", yOffset - 11 + (buttonHeight + spacing) * 2, isTrendVisible ? clrDarkGreen : clrBlue, isTrendVisible ? clrGreen : clrDodgerBlue, clrWhite);
-          
-          // Create the second button 10px below the second button
-          CreateSingleButton(arrowButtonRectName, arrowButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Arrow" : "Exec Arrow", yOffset - 11 + (buttonHeight + spacing) * 3, isArrowVisible ? clrDarkGreen : clrBlue, isArrowVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         //  // Create the first button (EMA Toggle)
+         CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend" : "Execution", yOffset, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
+      
+         // Create the second button 10px below the first button
+         CreateSingleButton(zoneButtonRectName, zoneButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Zones" : "Exec Zones", yOffset - 11 + buttonHeight + spacing, isZoneVisible ? clrDarkGreen : clrBlue, isZoneVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         // ObjectSetInteger(0, zoneButtonRectName, OBJPROP_HIDDEN, false);
+         // ObjectSetInteger(0, zoneButtonTextName, OBJPROP_HIDDEN, false);
+         
+         // Create the second button 10px below the second button
+         CreateSingleButton(trendButtonRectName, trendButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Trend" : "Exec Trend", yOffset - 11 + (buttonHeight + spacing) * 2, isTrendVisible ? clrDarkGreen : clrBlue, isTrendVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         // ObjectSetInteger(0, trendButtonRectName, OBJPROP_HIDDEN, false);
+         // ObjectSetInteger(0, trendButtonTextName, OBJPROP_HIDDEN, true);
+
+         // Create the second button 10px below the second button
+         CreateSingleButton(arrowButtonRectName, arrowButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Arrow" : "Exec Arrow", yOffset - 11 + (buttonHeight + spacing) * 3, isArrowVisible ? clrDarkGreen : clrBlue, isArrowVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         // ObjectSetInteger(0, arrowButtonRectName, OBJPROP_HIDDEN, true);
+         // ObjectSetInteger(0, arrowButtonTextName, OBJPROP_HIDDEN, false);
       }
       
       //+------------------------------------------------------------------+
