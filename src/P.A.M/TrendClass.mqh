@@ -461,7 +461,7 @@ public:
          if(isDropdownVisible) {
             CreateButtonsAndContainerContainer();
          } else {
-            DeleteEAObjects(dropdownButtonRectName);
+            DeleteEAObjects(dropdownButtonRectName + "_Container");
             DeleteEAObjects("PAM_ToggleEMA_" + IntegerToString(this.trendTimeframe));
              DeleteEAObjects("PAM_ToggleZone_" + IntegerToString(this.trendTimeframe));
              DeleteEAObjects("PAM_ToggleArrow_" + IntegerToString(this.trendTimeframe));
