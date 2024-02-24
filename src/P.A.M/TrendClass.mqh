@@ -21,12 +21,13 @@
 // BasicClass.mqh
 class TrendClass {
 private:
-    string emaButtonRectName, emaButtonTextName, zoneButtonRectName, zoneButtonTextName, trendButtonRectName, trendButtonTextName, arrowButtonRectName, arrowButtonTextName;
+    string emaButtonRectName, emaButtonTextName, zoneButtonRectName, zoneButtonTextName, dropdownButtonRectName, dropdownButtonTextName, arrowButtonRectName, arrowButtonTextName;
     datetime marketStructureExecutionTime;
     double highestHigh, highestLow, lowestLow, lowestHigh;
     double prevLL, prevLH, prevHH, prevHL;
-    bool isLowerLowReveseStarted, isHigherHighReverseStarted, isEMAVisible, isZoneVisible, isTrendVisible, isArrowVisible;
-    int indexLL, indexHH;
+    bool isLowerLowReveseStarted, isHigherHighReverseStarted, isEMAVisible, isZoneVisible, isDropdownVisible, isArrowVisible, isTrendTimeframe;
+    int indexLL, indexHH, buttonHeight, buttonWidth;
+    long midScreenPoint;
     TrendDirection currentTrend;
     ENUM_TIMEFRAMES trendTimeframe;
     int lookbackValue;
@@ -43,43 +44,47 @@ public:
    //| Get Market trend                                                 |
    //+------------------------------------------------------------------+
    void init(int lookback, ENUM_TIMEFRAMES timeframe) {
-       marketStructureExecutionTime = getTime(timeframe, 0);
-       highestHigh = 0;
-       highestLow = 0;
-       lowestLow = 0;
-       lowestHigh = 0;
-       prevLL = 0;
-       prevLH = 0;
-       prevHH = 0;
-       prevHL = 0;
-       isLowerLowReveseStarted = false;
-       isHigherHighReverseStarted = false;
-       indexLL = 0;
-       indexHH = 0;
-       currentTrend = TREND_NONE;
-       trendTimeframe = timeframe;
-       lookbackValue = lookback;
-       emaButtonRectName = "PAM_ToggleEMARect_" + IntegerToString(timeframe);
-       emaButtonTextName = "PAM_ToggleEMAText_" + IntegerToString(timeframe);
-       isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
-       zoneButtonRectName = "PAM_ToggleZoneRect_" + IntegerToString(timeframe);
-       zoneButtonTextName = "PAM_ToggleZoneText_" + IntegerToString(timeframe);
-       isZoneVisible = timeframe == inputExecutionTimeframe ? true : false;
-       trendButtonRectName = "PAM_ToggleTrendRect_" + IntegerToString(timeframe);
-       trendButtonTextName = "PAM_ToggleTrendText_" + IntegerToString(timeframe);
-       isTrendVisible = false;
-       arrowButtonRectName = "PAM_ToggleArrowRect_" + IntegerToString(timeframe);
-       arrowButtonTextName = "PAM_ToggleArrowText_" + IntegerToString(timeframe);
-       isArrowVisible = timeframe == inputTrendTimeframe ? true : false;
-       zoneClass.init(timeframe, isZoneVisible);
-       arrowClass.init(timeframe, isArrowVisible);
-       highsAndLowsClass.init(timeframe, isTrendVisible);
-       CreateButton();
-       if(timeframe == inputTrendTimeframe) {
-         Print("Trend INIT");
-       } else {
-         Print("Execution INIT");
-       }
+      marketStructureExecutionTime = getTime(timeframe, 0);
+      highestHigh = 0;
+      highestLow = 0;
+      lowestLow = 0;
+      lowestHigh = 0;
+      prevLL = 0;
+      prevLH = 0;
+      prevHH = 0;
+      prevHL = 0;
+      isLowerLowReveseStarted = false;
+      isHigherHighReverseStarted = false;
+      indexLL = 0;
+      indexHH = 0;
+      currentTrend = TREND_NONE;
+      trendTimeframe = timeframe;
+      lookbackValue = lookback;
+      buttonHeight = 30;
+      buttonWidth = 80;
+      midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
+      isTrendTimeframe = timeframe == inputTrendTimeframe;
+      emaButtonRectName = "PAM_ToggleEMA_" + IntegerToString(timeframe) + "_Rect";
+      emaButtonTextName = "PAM_ToggleEMA_" + IntegerToString(timeframe) + "_Text";
+      isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
+      zoneButtonRectName = "PAM_ToggleZone_" + IntegerToString(timeframe) + "_Rect";
+      zoneButtonTextName = "PAM_ToggleZone_" + IntegerToString(timeframe) + "_Text";
+      isZoneVisible = timeframe == inputExecutionTimeframe ? true : false;
+      dropdownButtonRectName = "PAM_ToggleDropdownRect_" + IntegerToString(timeframe);
+      dropdownButtonTextName = "PAM_ToggleDropdownText_" + IntegerToString(timeframe);
+      isDropdownVisible = timeframe == inputTrendTimeframe ? true : false;
+      arrowButtonRectName = "PAM_ToggleArrow_" + IntegerToString(timeframe) + "_Rect";
+      arrowButtonTextName = "PAM_ToggleArrow_" + IntegerToString(timeframe) + "_Text";
+      isArrowVisible = timeframe == inputTrendTimeframe ? true : false;
+      zoneClass.init(timeframe, isZoneVisible);
+      arrowClass.init(timeframe, isArrowVisible);
+      highsAndLowsClass.init(timeframe, false);
+      CreateButton();
+      if(timeframe == inputTrendTimeframe) {
+      Print("Trend INIT");
+      } else {
+      Print("Execution INIT");
+      }
     }
     
    //+------------------------------------------------------------------+
@@ -339,40 +344,78 @@ public:
       //| Initialize Buttons                                               |
       //+------------------------------------------------------------------+  
       void CreateButton() {
-         int buttonHeight = 30;
-         long midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
-         long yOffset = trendTimeframe == inputTrendTimeframe ? midScreenPoint : midScreenPoint - buttonHeight;
-         int spacing = 10;
+         long yOffset = isTrendTimeframe ? midScreenPoint : midScreenPoint - buttonHeight;
       
-         CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend" : "Execution", yOffset, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
+         CreateSingleButton(
+            dropdownButtonRectName, 
+            dropdownButtonTextName, 
+            isTrendTimeframe ? "Trend" : "Execution", 
+            yOffset, 
+            buttonWidth,
+            isTrendTimeframe ? 23 : 38,
+            isDropdownVisible ? clrDarkGreen : clrBlue, 
+            isDropdownVisible ? clrGreen : clrDodgerBlue, 
+            clrWhite
+         );
+
+         if(isDropdownVisible) {
+            CreateButtonsAndContainerContainer();
+         }
       }
 
       //+------------------------------------------------------------------+
       //| Initialize Buttons Container                                     |
       //+------------------------------------------------------------------+  
-      void CreateButtonsContainer() {
-         int buttonHeight = 30;
-         long midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
-         long yOffset = trendTimeframe == inputTrendTimeframe ? midScreenPoint : midScreenPoint - buttonHeight;
+      void CreateButtonsAndContainerContainer() {
          int spacing = 10;
-      
-         //  // Create the first button (EMA Toggle)
-         CreateSingleButton(emaButtonRectName, emaButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend" : "Execution", yOffset, isEMAVisible ? clrDarkGreen : clrBlue, isEMAVisible ? clrGreen : clrDodgerBlue, clrWhite);
-      
-         // Create the second button 10px below the first button
-         CreateSingleButton(zoneButtonRectName, zoneButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Zones" : "Exec Zones", yOffset - 11 + buttonHeight + spacing, isZoneVisible ? clrDarkGreen : clrBlue, isZoneVisible ? clrGreen : clrDodgerBlue, clrWhite);
-         // ObjectSetInteger(0, zoneButtonRectName, OBJPROP_HIDDEN, false);
-         // ObjectSetInteger(0, zoneButtonTextName, OBJPROP_HIDDEN, false);
-         
-         // Create the second button 10px below the second button
-         CreateSingleButton(trendButtonRectName, trendButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Trend" : "Exec Trend", yOffset - 11 + (buttonHeight + spacing) * 2, isTrendVisible ? clrDarkGreen : clrBlue, isTrendVisible ? clrGreen : clrDodgerBlue, clrWhite);
-         // ObjectSetInteger(0, trendButtonRectName, OBJPROP_HIDDEN, false);
-         // ObjectSetInteger(0, trendButtonTextName, OBJPROP_HIDDEN, true);
+         int boxWidth = buttonWidth + (spacing * 2);
+         int boxHeight = (buttonHeight * 3) + (spacing * 4);
+         long yOffset = isTrendTimeframe ? midScreenPoint + buttonHeight + spacing : midScreenPoint - (buttonHeight) - spacing - boxHeight;
 
-         // Create the second button 10px below the second button
-         CreateSingleButton(arrowButtonRectName, arrowButtonTextName, trendTimeframe == inputTrendTimeframe ? "Trend Arrow" : "Exec Arrow", yOffset - 11 + (buttonHeight + spacing) * 3, isArrowVisible ? clrDarkGreen : clrBlue, isArrowVisible ? clrGreen : clrDodgerBlue, clrWhite);
-         // ObjectSetInteger(0, arrowButtonRectName, OBJPROP_HIDDEN, true);
-         // ObjectSetInteger(0, arrowButtonTextName, OBJPROP_HIDDEN, false);
+         CreateButtonContainer(
+            dropdownButtonRectName + "_Container",
+            yOffset,
+            boxWidth,
+            boxHeight,
+            clrLightGray,
+            clrLightGray
+         );
+
+         CreateSingleButton(
+            arrowButtonRectName, 
+            arrowButtonTextName, 
+            "Arrow", 
+            isTrendTimeframe ? yOffset + spacing : yOffset + boxHeight - (spacing + buttonHeight), 
+            buttonWidth,
+            28,
+            isArrowVisible ? clrDarkGreen : clrBlue, 
+            isArrowVisible ? clrGreen : clrDodgerBlue, 
+            clrWhite
+         );
+
+         CreateSingleButton(
+            zoneButtonRectName, 
+            zoneButtonTextName, 
+            "Zone", 
+            isTrendTimeframe ? yOffset + spacing + (spacing + buttonHeight) : yOffset + boxHeight - ((spacing + buttonHeight) * 2), 
+            buttonWidth,
+            28,
+            isZoneVisible ? clrDarkGreen : clrBlue, 
+            isZoneVisible ? clrGreen : clrDodgerBlue, 
+            clrWhite
+         );
+
+         CreateSingleButton(
+            emaButtonRectName, 
+            emaButtonTextName, 
+            "EMA", 
+            isTrendTimeframe ? yOffset + spacing + ((spacing + buttonHeight) * 2) : yOffset + boxHeight - ((spacing + buttonHeight) * 3), 
+            buttonWidth,
+            28,
+            isEMAVisible ? clrDarkGreen : clrBlue, 
+            isEMAVisible ? clrGreen : clrDodgerBlue, 
+            clrWhite
+         );
       }
       
       //+------------------------------------------------------------------+
@@ -387,11 +430,11 @@ public:
          if(isEMAVisible) {
              // Code to draw EMA
              for(int i = lookBack; i >= 1; i--) {
-               UpdateEMA(i, trendTimeframe, 50);
+               UpdateEMA(i, this.trendTimeframe, 50);
             }
          } else {
-             // Code to delete EMA
-             DeleteEAObjects("PAM_EMA_" + IntegerToString(trendTimeframe));
+             // Code to delete all items in the container
+             DeleteEAObjects("PAM_EMA_" + IntegerToString(this.trendTimeframe));
          }
       }
       
@@ -405,21 +448,23 @@ public:
             // Code to draw Zone
             zoneClass.DrawAllZones();
          } else {
-            DeleteEAObjects("PAM_zone_" + IntegerToString(trendTimeframe));
+            DeleteEAObjects("PAM_zone_" + IntegerToString(this.trendTimeframe));
          }
       }
       
       // Function for the trend button's action
       void ToggleTrendDisplay() {
-         isTrendVisible = highsAndLowsClass.ToggleIsVisible();
-         ObjectSetInteger(0, trendButtonRectName, OBJPROP_COLOR, isTrendVisible ? clrGreen : clrDodgerBlue); // Change rectangle color when clicked
-         ObjectSetInteger(0, trendButtonRectName, OBJPROP_BGCOLOR, isTrendVisible ? clrDarkGreen : clrBlue);
+         isDropdownVisible = !isDropdownVisible;
+         ObjectSetInteger(0, dropdownButtonRectName, OBJPROP_COLOR, isDropdownVisible ? clrGreen : clrDodgerBlue); // Change rectangle color when clicked
+         ObjectSetInteger(0, dropdownButtonRectName, OBJPROP_BGCOLOR, isDropdownVisible ? clrDarkGreen : clrBlue);
          
-         if(isTrendVisible) {
-            // Code to draw Zone
-            highsAndLowsClass.DrawAllTrends();
+         if(isDropdownVisible) {
+            CreateButtonsAndContainerContainer();
          } else {
-            DeleteEAObjects("PAM_trend_" + IntegerToString(trendTimeframe));
+            DeleteEAObjects(dropdownButtonRectName);
+            DeleteEAObjects("PAM_ToggleEMA_" + IntegerToString(this.trendTimeframe));
+             DeleteEAObjects("PAM_ToggleZone_" + IntegerToString(this.trendTimeframe));
+             DeleteEAObjects("PAM_ToggleArrow_" + IntegerToString(this.trendTimeframe));
          }
       }
       
@@ -451,7 +496,7 @@ public:
             ToggleZoneDisplay();
         }
         // Check if the Trend Button was clicked
-        else if(sparam == trendButtonRectName || sparam == trendButtonTextName) {
+        else if(sparam == dropdownButtonRectName || sparam == dropdownButtonTextName) {
             ToggleTrendDisplay();
         }
         // Check if the Arrow Button was clicked

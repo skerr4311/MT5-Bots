@@ -13,29 +13,42 @@
 //+------------------------------------------------------------------+
 //| Draw Functions                                                   |
 //+------------------------------------------------------------------+
+void CreateButtonContainer(string rectName, long yDistance, int boxWidth, int boxHeight, color bgColor, color borderColor) {
+    if(ObjectCreate(0, rectName, OBJ_RECTANGLE_LABEL, 0, 0, 0)) {
+        ObjectSetInteger(0, rectName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - boxWidth);
+        ObjectSetInteger(0, rectName, OBJPROP_YDISTANCE, yDistance);
+        ObjectSetInteger(0, rectName, OBJPROP_XSIZE, boxWidth);
+        ObjectSetInteger(0, rectName, OBJPROP_YSIZE, boxHeight);
+        ObjectSetInteger(0, rectName, OBJPROP_BGCOLOR, bgColor);
+        ObjectSetInteger(0, rectName, OBJPROP_COLOR, borderColor);
+        ObjectSetInteger(0, rectName, OBJPROP_BORDER_TYPE, BORDER_FLAT);
+        ObjectSetInteger(0, rectName, OBJPROP_SELECTABLE, false);
+        ObjectSetInteger(0, rectName, OBJPROP_SELECTED, false);
+    }
+}
 
 //+------------------------------------------------------------------+
 //| Create Button                                                    |
 //+------------------------------------------------------------------+  
-void CreateSingleButton(string rectName, string textName, string buttonText, long yDistance, color bgColor, color borderColor, color textColor) {
+void CreateSingleButton(string rectName, string textName, string buttonText, long yDistance, int wButton, int textOffset, color bgColor, color borderColor, color textColor) {
     // Create the rectangle
     if(ObjectCreate(0, rectName, OBJ_RECTANGLE_LABEL, 0, 0, 0)) {
-        ObjectSetInteger(0, rectName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - 115);
+        ObjectSetInteger(0, rectName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - wButton - 10);
         ObjectSetInteger(0, rectName, OBJPROP_YDISTANCE, yDistance);
-        ObjectSetInteger(0, rectName, OBJPROP_XSIZE, 100);
+        ObjectSetInteger(0, rectName, OBJPROP_XSIZE, wButton);
         ObjectSetInteger(0, rectName, OBJPROP_YSIZE, 30);
         ObjectSetInteger(0, rectName, OBJPROP_BGCOLOR, bgColor);
         ObjectSetInteger(0, rectName, OBJPROP_COLOR, borderColor);
         ObjectSetInteger(0, rectName, OBJPROP_BORDER_TYPE, BORDER_FLAT);
-        ObjectSetInteger(0, rectName, OBJPROP_SELECTABLE, true);
+        ObjectSetInteger(0, rectName, OBJPROP_SELECTABLE, false);
         ObjectSetInteger(0, rectName, OBJPROP_SELECTED, false);
     }
 
     // Create the label for text
     if(ObjectCreate(0, textName, OBJ_LABEL, 0, 0, 0)) {
         ObjectSetString(0, textName, OBJPROP_TEXT, buttonText);
-        ObjectSetInteger(0, textName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - 100);
-        ObjectSetInteger(0, textName, OBJPROP_YDISTANCE, yDistance + 5);
+        ObjectSetInteger(0, textName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - (wButton / 2) - textOffset);
+        ObjectSetInteger(0, textName, OBJPROP_YDISTANCE, yDistance + 6);
         ObjectSetInteger(0, textName, OBJPROP_COLOR, textColor);
         ObjectSetInteger(0, textName, OBJPROP_BACK, false);
         ObjectSetInteger(0, textName, OBJPROP_SELECTABLE, false);
