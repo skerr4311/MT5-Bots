@@ -64,17 +64,17 @@ public:
       buttonWidth = 80;
       midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
       isTrendTimeframe = timeframe == inputTrendTimeframe;
-      emaButtonRectName = "PAM_ToggleEMA_" + IntegerToString(timeframe) + "_Rect";
-      emaButtonTextName = "PAM_ToggleEMA_" + IntegerToString(timeframe) + "_Text";
+      emaButtonRectName = "PAM_" + IntegerToString(timeframe) + "_ToggleEMA_Rect";
+      emaButtonTextName = "PAM_" + IntegerToString(timeframe) + "_ToggleEMA_Text";
       isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
-      zoneButtonRectName = "PAM_ToggleZone_" + IntegerToString(timeframe) + "_Rect";
-      zoneButtonTextName = "PAM_ToggleZone_" + IntegerToString(timeframe) + "_Text";
+      zoneButtonRectName = "PAM_" + IntegerToString(timeframe) + "_ToggleZone_Rect";
+      zoneButtonTextName = "PAM_" + IntegerToString(timeframe) + "_ToggleZone_Text";
       isZoneVisible = timeframe == inputExecutionTimeframe ? true : false;
       dropdownButtonRectName = "PAM_ToggleDropdownRect_" + IntegerToString(timeframe);
       dropdownButtonTextName = "PAM_ToggleDropdownText_" + IntegerToString(timeframe);
       isDropdownVisible = timeframe == inputTrendTimeframe ? true : false;
-      arrowButtonRectName = "PAM_ToggleArrow_" + IntegerToString(timeframe) + "_Rect";
-      arrowButtonTextName = "PAM_ToggleArrow_" + IntegerToString(timeframe) + "_Text";
+      arrowButtonRectName = "PAM_" + IntegerToString(timeframe) + "_ToggleArrow_Rect";
+      arrowButtonTextName = "PAM_" + IntegerToString(timeframe) + "_ToggleArrow_Text";
       isArrowVisible = timeframe == inputTrendTimeframe ? true : false;
       zoneClass.init(timeframe, isZoneVisible);
       arrowClass.init(timeframe, isArrowVisible);
@@ -452,8 +452,8 @@ public:
          }
       }
       
-      // Function for the trend button's action
-      void ToggleTrendDisplay() {
+      // Function for the dropdown options
+      void ToggleDropDownDisplay() {
          isDropdownVisible = !isDropdownVisible;
          ObjectSetInteger(0, dropdownButtonRectName, OBJPROP_COLOR, isDropdownVisible ? clrGreen : clrDodgerBlue); // Change rectangle color when clicked
          ObjectSetInteger(0, dropdownButtonRectName, OBJPROP_BGCOLOR, isDropdownVisible ? clrDarkGreen : clrBlue);
@@ -462,9 +462,7 @@ public:
             CreateButtonsAndContainerContainer();
          } else {
             DeleteEAObjects(dropdownButtonRectName + "_Container");
-            DeleteEAObjects("PAM_ToggleEMA_" + IntegerToString(this.trendTimeframe));
-             DeleteEAObjects("PAM_ToggleZone_" + IntegerToString(this.trendTimeframe));
-             DeleteEAObjects("PAM_ToggleArrow_" + IntegerToString(this.trendTimeframe));
+            DeleteEAObjects("PAM_" + IntegerToString(this.trendTimeframe));
          }
       }
       
@@ -497,7 +495,7 @@ public:
         }
         // Check if the Trend Button was clicked
         else if(sparam == dropdownButtonRectName || sparam == dropdownButtonTextName) {
-            ToggleTrendDisplay();
+            ToggleDropDownDisplay();
         }
         // Check if the Arrow Button was clicked
         else if(sparam == arrowButtonRectName || sparam == arrowButtonTextName) {
