@@ -150,6 +150,17 @@ class TradeHandler
          void handleChartEvent(const string &sparam) {
              trendClass.handleButtonClick(sparam);
              executionClass.handleButtonClick(sparam);
+             if(isLondonInitiated()) {
+               londonKZ.HandleButtonClick(sparam);
+            }
+            
+            if(isNewYorkInitiated()) {
+               newYorkKZ.HandleButtonClick(sparam);
+            }
+            
+            if(isAsiaInitiated()) {
+               asianKZ.HandleButtonClick(sparam);
+            }
          }
          
          //+------------------------------------------------------------------+

@@ -9,11 +9,12 @@
 //+------------------------------------------------------------------+
 #include "iFunctions.mqh"
 #include "CommonGlobals.mqh"
+#include "iDraw.mqh"
 
 class KillZone {
   private:
    ENUM_TIMEFRAMES TimeFrame;
-   string boxNamePrefix;
+   string boxNamePrefix, buttonPrefix;
    bool isInKillZone, isDrawingStarted, isKillZoneVisible;
    string kzStart;
    string kzEnd;
@@ -83,6 +84,22 @@ class KillZone {
       killZoneCount = 0;
       isKillZoneVisible = true;
     }
+
+   //+------------------------------------------------------------------+
+   //| Create Toggle Button                                             |
+   //+------------------------------------------------------------------+
+   void DrawToggleButton() {
+      // Draw the toggle button at the bottom middle of the screen
+   }
+
+   //+------------------------------------------------------------------+
+   //| Handle Button Click                                              |
+   //+------------------------------------------------------------------+
+   void HandleButtonClick(string sparam) {
+      if (sparam == buttonPrefix) {
+         ToggleIsVisible();
+      }
+   }
     
    //+------------------------------------------------------------------+
    //| Draw Past Zones                                                  |
@@ -98,6 +115,12 @@ class KillZone {
    //+------------------------------------------------------------------+
    bool ToggleIsVisible() {
        isKillZoneVisible = !isKillZoneVisible;
+
+       if (isKillZoneVisible) {
+         DrawAllKillZones();
+       } else {
+         DeleteEAObjects(boxNamePrefix);
+       }
        return isKillZoneVisible;
    }
 
