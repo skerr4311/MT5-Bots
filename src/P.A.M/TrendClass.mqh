@@ -26,8 +26,8 @@ private:
     double highestHigh, highestLow, lowestLow, lowestHigh;
     double prevLL, prevLH, prevHH, prevHL;
     bool isLowerLowReveseStarted, isHigherHighReverseStarted, isEMAVisible, isZoneVisible, isDropdownVisible, isArrowVisible, isTrendTimeframe;
-    int indexLL, indexHH, buttonHeight, buttonWidth;
-    long midScreenPoint;
+    int indexLL, indexHH, buttonHeight, buttonWidth, spacing;
+    long midScreenPoint, chartWidth;
     TrendDirection currentTrend;
     ENUM_TIMEFRAMES trendTimeframe;
     int lookbackValue;
@@ -62,6 +62,8 @@ public:
       lookbackValue = lookback;
       buttonHeight = 30;
       buttonWidth = 80;
+      spacing = 10;
+      chartWidth = ChartGetInteger(0, CHART_WIDTH_IN_PIXELS);
       midScreenPoint = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) / 2;
       isTrendTimeframe = timeframe == inputTrendTimeframe;
       emaButtonRectName = "PAM_" + IntegerToString(timeframe) + "_ToggleEMA_Rect";
@@ -351,8 +353,9 @@ public:
             dropdownButtonTextName, 
             isTrendTimeframe ? "Trend" : "Execution", 
             yOffset, 
+            chartWidth - buttonWidth - 10,
             buttonWidth,
-            isTrendTimeframe ? 23 : 38,
+            chartWidth - (buttonWidth / 2) - (isTrendTimeframe ? 23 : 38),
             isDropdownVisible ? clrDarkGreen : clrBlue, 
             isDropdownVisible ? clrGreen : clrDodgerBlue, 
             clrWhite
@@ -367,10 +370,10 @@ public:
       //| Initialize Buttons Container                                     |
       //+------------------------------------------------------------------+  
       void CreateButtonsAndContainerContainer() {
-         int spacing = 10;
          int boxWidth = buttonWidth + (spacing * 2);
          int boxHeight = (buttonHeight * 3) + (spacing * 4);
          long yOffset = isTrendTimeframe ? midScreenPoint + buttonHeight + spacing : midScreenPoint - (buttonHeight) - spacing - boxHeight;
+
 
          CreateButtonContainer(
             dropdownButtonRectName + "_Container",
@@ -386,8 +389,9 @@ public:
             arrowButtonTextName, 
             "Arrow", 
             isTrendTimeframe ? yOffset + spacing : yOffset + boxHeight - (spacing + buttonHeight), 
+            chartWidth - buttonWidth - 10,
             buttonWidth,
-            28,
+            chartWidth - (buttonWidth / 2) - 28,
             isArrowVisible ? clrDarkGreen : clrBlue, 
             isArrowVisible ? clrGreen : clrDodgerBlue, 
             clrWhite
@@ -398,8 +402,9 @@ public:
             zoneButtonTextName, 
             "Zone", 
             isTrendTimeframe ? yOffset + spacing + (spacing + buttonHeight) : yOffset + boxHeight - ((spacing + buttonHeight) * 2), 
+            chartWidth - buttonWidth - 10,
             buttonWidth,
-            28,
+            chartWidth - (buttonWidth / 2) - 28,
             isZoneVisible ? clrDarkGreen : clrBlue, 
             isZoneVisible ? clrGreen : clrDodgerBlue, 
             clrWhite
@@ -410,8 +415,9 @@ public:
             emaButtonTextName, 
             "EMA", 
             isTrendTimeframe ? yOffset + spacing + ((spacing + buttonHeight) * 2) : yOffset + boxHeight - ((spacing + buttonHeight) * 3), 
+            chartWidth - buttonWidth - 10,
             buttonWidth,
-            28,
+            chartWidth - (buttonWidth / 2) - 28,
             isEMAVisible ? clrDarkGreen : clrBlue, 
             isEMAVisible ? clrGreen : clrDodgerBlue, 
             clrWhite

@@ -30,10 +30,10 @@ void CreateButtonContainer(string rectName, long yDistance, int boxWidth, int bo
 //+------------------------------------------------------------------+
 //| Create Button                                                    |
 //+------------------------------------------------------------------+  
-void CreateSingleButton(string rectName, string textName, string buttonText, long yDistance, int wButton, int textOffset, color bgColor, color borderColor, color textColor) {
+void CreateSingleButton(string rectName, string textName, string buttonText, long yDistance, long xDistance, int wButton, int textOffset, color bgColor, color borderColor, color textColor) {
     // Create the rectangle
     if(ObjectCreate(0, rectName, OBJ_RECTANGLE_LABEL, 0, 0, 0)) {
-        ObjectSetInteger(0, rectName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - wButton - 10);
+        ObjectSetInteger(0, rectName, OBJPROP_XDISTANCE, xDistance);
         ObjectSetInteger(0, rectName, OBJPROP_YDISTANCE, yDistance);
         ObjectSetInteger(0, rectName, OBJPROP_XSIZE, wButton);
         ObjectSetInteger(0, rectName, OBJPROP_YSIZE, 30);
@@ -47,7 +47,7 @@ void CreateSingleButton(string rectName, string textName, string buttonText, lon
     // Create the label for text
     if(ObjectCreate(0, textName, OBJ_LABEL, 0, 0, 0)) {
         ObjectSetString(0, textName, OBJPROP_TEXT, buttonText);
-        ObjectSetInteger(0, textName, OBJPROP_XDISTANCE, ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) - (wButton / 2) - textOffset);
+        ObjectSetInteger(0, textName, OBJPROP_XDISTANCE, textOffset);
         ObjectSetInteger(0, textName, OBJPROP_YDISTANCE, yDistance + 6);
         ObjectSetInteger(0, textName, OBJPROP_COLOR, textColor);
         ObjectSetInteger(0, textName, OBJPROP_BACK, false);

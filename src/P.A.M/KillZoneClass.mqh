@@ -77,29 +77,51 @@ class KillZone {
     void init(ENUM_TIMEFRAMES tf, KillZoneTypes killZone, string start, string end) {
       TimeFrame = tf;
       boxNamePrefix = "PAM_" + killZone + "_KillZone_";
+      buttonPrefix = "PAM_KZ_" + killZone;
       isInKillZone = false;
       kzStart = start;
       kzEnd = end;
       killZoneType = killZone;
       killZoneCount = 0;
       isKillZoneVisible = true;
+      DrawToggleButton();
     }
 
    //+------------------------------------------------------------------+
    //| Create Toggle Button                                             |
    //+------------------------------------------------------------------+
    void DrawToggleButton() {
-      // Draw the toggle button at the bottom middle of the screen
+      int buttonHeight = 30;
+      int buttonWidth = 80;
+      int spacing = 10;
+      long chartWidth = ChartGetInteger(0, CHART_WIDTH_IN_PIXELS) / 2 - (buttonWidth / 2);
+      long yOffset = ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS) - buttonHeight;
+      long buttonPlacement = KillZoneTypeToString(killZoneType) == "London" ? chartWidth : KillZoneTypeToString(killZoneType) == "Asian" ? chartWidth + buttonWidth : chartWidth - buttonWidth;
+      int textOffset = KillZoneTypeToString(killZoneType) == "London" ? 16 : KillZoneTypeToString(killZoneType) == "Asian" ? 19 : 13;
+
+
+      CreateSingleButton(
+            buttonPrefix + "_Button", 
+            buttonPrefix + "_Text", 
+            KillZoneTypeToString(killZoneType),
+            yOffset, 
+            buttonPlacement,
+            buttonWidth,
+            buttonPlacement + textOffset,
+            isKillZoneVisible ? clrDarkGreen : clrBlue, 
+            isKillZoneVisible ? clrGreen : clrDodgerBlue, 
+            clrWhite
+         );
    }
 
    //+------------------------------------------------------------------+
    //| Handle Button Click                                              |
    //+------------------------------------------------------------------+
    void HandleButtonClick(string sparam) {
-      if (sparam == buttonPrefix) {
-         ToggleIsVisible();
-      }
-   }
+    if (StringFind(sparam, buttonPrefix) == 0) {
+        ToggleIsVisible();
+    }
+}
     
    //+------------------------------------------------------------------+
    //| Draw Past Zones                                                  |
@@ -114,14 +136,16 @@ class KillZone {
    //| Toggle isKillZoneVisible                                         |
    //+------------------------------------------------------------------+
    bool ToggleIsVisible() {
-       isKillZoneVisible = !isKillZoneVisible;
+      isKillZoneVisible = !isKillZoneVisible;
+      ObjectSetInteger(0, buttonPrefix + "_Button", OBJPROP_COLOR, isKillZoneVisible ? clrGreen : clrDodgerBlue);
+      ObjectSetInteger(0, buttonPrefix + "_Button", OBJPROP_BGCOLOR, isKillZoneVisible ? clrDarkGreen : clrBlue);
 
-       if (isKillZoneVisible) {
-         DrawAllKillZones();
-       } else {
-         DeleteEAObjects(boxNamePrefix);
-       }
-       return isKillZoneVisible;
+      if (isKillZoneVisible) {
+      DrawAllKillZones();
+      } else {
+      DeleteEAObjects(boxNamePrefix);
+      }
+      return isKillZoneVisible;
    }
 
    //+------------------------------------------------------------------+
