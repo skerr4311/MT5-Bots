@@ -11,6 +11,7 @@
 #include "tFunctions.mqh"
 #include "KillZoneClass.mqh"
 #include "iFunctions.mqh"
+#include "CommonGlobals.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -91,13 +92,11 @@ class TradeHandler
                bool isOneKillZoneActive = false;
                if(isLondonInitiated() && londonKZ.checkIsInKillZone(0)){
                   isOneKillZoneActive = true;
-               }
-               
-               if(isNewYorkInitiated() && newYorkKZ.checkIsInKillZone(0)) {
+               } else if(isNewYorkInitiated() && newYorkKZ.checkIsInKillZone(0)) {
                   isOneKillZoneActive = true;
-               }
-               
-               if(isAsiaInitiated() && asianKZ.checkIsInKillZone(0)) {
+               } else if(isAsiaInitiated() && asianKZ.checkIsInKillZone(0)) {
+                  isOneKillZoneActive = true;
+               } else if (!isLondonInitiated() && !isNewYorkInitiated() && !isAsiaInitiated()) {
                   isOneKillZoneActive = true;
                }
             
@@ -126,9 +125,14 @@ class TradeHandler
                      currentExecTime = currentExecTime;
                      return;
                   }
-                  */
+                  
                   // check three
                   if(CheckRejectionOffEma()){
+                     oncePerBarExec = currentExecTime;
+                     return;
+                  }
+                  */
+                  if(CheckPriceContinuationOffZone()){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
@@ -236,6 +240,35 @@ class TradeHandler
             }
             
             return false;
+         }
+
+         //+------------------------------------------------------------------+
+         //| Check if price continuation off a zone                           |
+         //+------------------------------------------------------------------+
+         bool CheckPriceContinuationOffZone() {
+            TrendDirection trend = trendClass.getTrend();
+            TrendDirection execTrend = executionClass.getTrend();
+            CandleInfo prevPrevCandle = getCandleInfo(inputExecutionTimeframe, 2);
+            CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
+            CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
+            bool isTrade = false;
+            if (EnumToString(trend) == "Down") {
+               Print("going down!");
+            } else if (EnumToString(trend) == "Up" && EnumToString(execTrend) == "Up") {
+               for (int i = 0; i < executionClass.getZoneCount(); i++) {
+                 ZoneInfo zone = executionClass.getZones(i);
+                 if (zone.trend == TREND_UP){
+                  if (zone.top > prevPrevCandle.low && prevPrevCandle.high > zone.top && prevCandle.high > zone.top ) {
+                     HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
+                     isTrade = true;
+                     break;
+                  }
+                 }
+               }
+               
+            }
+            
+            return isTrade;
          }
          
          //+------------------------------------------------------------------+
