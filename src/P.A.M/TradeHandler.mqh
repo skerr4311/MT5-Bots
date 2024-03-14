@@ -30,6 +30,7 @@ class TradeHandler
          KillZone newYorkKZ;
          KillZone asianKZ;
          bool isInKillZone;
+         ZoneInfo breakerBlocks[];
       
       public:
          // Constructor
@@ -79,8 +80,45 @@ class TradeHandler
             trendClass.HandleTrend();
             executionClass.HandleTrend();
             CheckIfInKillZone();
+            checkForBreakerBlock();
             checkForEntry();
             UpdateInfoBox();
+         }
+
+         //+------------------------------------------------------------------+
+         //| Check for breaker block                                          |
+         //+------------------------------------------------------------------+
+         void checkForBreakerBlock() {
+            for(int i = 0; i < trendClass.getZoneCount(); i++) {
+               ZoneInfo trendZone = trendClass.getZones(i);
+
+               for(int j = 0; j < executionClass.getZoneCount(); j++) {
+                  ZoneInfo executionZone = executionClass.getZones(j);
+
+                  if(executionZone.top <= trendZone.top && executionZone.bottom >= trendZone.bottom) {
+                     bool isAddToBreakerArray = false;
+                     if (ArraySize(breakerBlocks) == 0) {
+                        isAddToBreakerArray = true;
+                     } else {
+                        isAddToBreakerArray = true;                
+                        for(int x = 0; x < ArraySize(breakerBlocks); x++) {
+                           ZoneInfo breakerBlock = breakerBlocks[x];
+                           if (executionZone.name == breakerBlock.name) {
+                              isAddToBreakerArray = false;
+                           }
+                        }
+                     }
+
+                     if (isAddToBreakerArray) {
+                        ArrayResize(breakerBlocks, ArraySize(breakerBlocks) + 1);
+                        breakerBlocks[ArraySize(breakerBlocks) - 1] = executionZone;
+
+                        DrawZone(executionZone.startTime, "PAM_12342" + ArraySize(breakerBlocks), executionZone.top, executionZone.bottom, executionZone.trend, inputExecutionTimeframe);
+                     }
+
+                  }
+               }
+            }
          }
          
          //+------------------------------------------------------------------+
@@ -177,7 +215,8 @@ class TradeHandler
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
              "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
              "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
-             "\nAccount Balance: ", GetAccountBalance());
+             "\nAccount Balance: ", GetAccountBalance(),
+             "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
          
          //+------------------------------------------------------------------+
