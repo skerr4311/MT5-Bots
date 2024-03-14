@@ -18,6 +18,7 @@ private:
       string name;
       double price;
       TrendDirection trend;
+      ENUM_TIMEFRAMES arrowTimeframe;
    };
    ArrowInfo arrows[];
     
@@ -42,7 +43,7 @@ public:
    void DrawAllArrows() {
       for (int i = 0; i < ArraySize(arrows); i++) {
          ArrowInfo arrow = arrows[i];
-         DrawTrendArrow(arrow.time, arrow.name, arrow.price, arrow.trend);
+         DrawTrendArrow(arrow.time, arrow.name, arrow.price, arrow.trend, arrow.arrowTimeframe);
       }
    }
    
@@ -55,6 +56,7 @@ public:
        info.name = name;
        info.price = price;
        info.trend = trend;
+       info.arrowTimeframe = arrowTimeframe;
        ArrayResize(arrows, ArraySize(arrows) + 1);
        arrows[ArraySize(arrows) - 1] = info;
    }
@@ -70,7 +72,7 @@ public:
        
        AddArrowInfo(time, objectName, price, trend);
        if(isArrowVisible){
-         DrawTrendArrow(time, objectName, price, trend);
+         DrawTrendArrow(time, objectName, price, trend, arrowTimeframe);
        }
    }
    

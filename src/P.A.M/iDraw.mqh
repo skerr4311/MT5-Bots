@@ -101,6 +101,7 @@ void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, st
 void DrawZone(datetime startTime, string zoneName, double priceTop, double priceBottom, TrendDirection trend, ENUM_TIMEFRAMES timeframe) {
     datetime endTime = getTime(timeframe, 0); // Current time
     color zoneColor = clrRed;
+    bool zoneFill = timeframe != inputTrendTimeframe;
 
     if (trend == TREND_UP) {
       zoneColor = clrGreen;
@@ -115,9 +116,9 @@ void DrawZone(datetime startTime, string zoneName, double priceTop, double price
      // Set properties of the rectangle (color, style, etc.)
      ObjectSetInteger(0, zoneName, OBJPROP_STYLE, STYLE_SOLID);
      ObjectSetInteger(0, zoneName, OBJPROP_COLOR, zoneColor);
-     ObjectSetInteger(0, zoneName, OBJPROP_FILL, true);
+     ObjectSetInteger(0, zoneName, OBJPROP_FILL, zoneFill);
      ObjectSetInteger(0, zoneName, OBJPROP_BACK, false); // Set to false if you don't want it in the background
-     ObjectSetInteger(0, zoneName, OBJPROP_SELECTABLE, false);
+     ObjectSetInteger(0, zoneName, OBJPROP_SELECTABLE, true);
      ObjectSetInteger(0, zoneName, OBJPROP_SELECTED, false);
 }
 
@@ -174,10 +175,11 @@ void DrawKillZone(KillZoneInfo &kz) {
 //+------------------------------------------------------------------+
 //| Draw Trend arrow                                                 |
 //+------------------------------------------------------------------+
-void DrawTrendArrow(datetime time, string name, double price, TrendDirection trend) {
+void DrawTrendArrow(datetime time, string name, double price, TrendDirection trend, ENUM_TIMEFRAMES arrowTimeframe) {
    ENUM_OBJECT arrow = trend == TREND_UP ? OBJ_ARROW_UP : OBJ_ARROW_DOWN;
    color arrowColor = trend == TREND_UP ? clrGreenYellow : clrDeepPink;
    long anchor = trend == TREND_UP ? ANCHOR_TOP : ANCHOR_BOTTOM;
+   int arrowSize = arrowTimeframe == inputTrendTimeframe ? 3 : 1;
    
    if(!ObjectCreate(0, name, arrow, 0, time, price)) {
      Print("Failed to create up arrow: ", GetLastError());
@@ -186,9 +188,9 @@ void DrawTrendArrow(datetime time, string name, double price, TrendDirection tre
 
     // Set properties of the arrow
     ObjectSetInteger(0, name, OBJPROP_COLOR, arrowColor);
-    ObjectSetInteger(0, name, OBJPROP_WIDTH, 2); // Adjust width for size
+    ObjectSetInteger(0, name, OBJPROP_WIDTH, arrowSize); // Adjust width for size
     ObjectSetInteger(0, name, OBJPROP_ANCHOR, anchor);
-    ObjectSetInteger(0, name, OBJPROP_SELECTABLE, true);
+    ObjectSetInteger(0, name, OBJPROP_SELECTABLE, false);
     ObjectSetInteger(0, name, OBJPROP_SELECTED, false);
 }
 
