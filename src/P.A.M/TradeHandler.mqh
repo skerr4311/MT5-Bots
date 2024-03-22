@@ -285,13 +285,12 @@ class TradeHandler
          //| Check if price continuation off a zone                           |
          //+------------------------------------------------------------------+
          /*
-         TESTING: trend: 1hr exec: 5min period: 01-23 - 03-24
+         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
 
          GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
          EURUSD: 5.83 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
          USDCAD: FAIL
          GBPUSD: 1.23 winRate: 30.77% short: 00.00% long: 40.00% consecLoss: 4
-         GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
          AUDUSD: FAIL
          USDJPY: 1.27 winRate: 31.58% short: 28.57% long: 33.33% consecLoss: 3
          USDCHF: 0.80 winRate: 20.00% short: 00.00% long: 25.00% consecLoss: 2
