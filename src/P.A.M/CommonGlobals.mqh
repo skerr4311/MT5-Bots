@@ -4,8 +4,8 @@
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 
-input ENUM_TIMEFRAMES inputTrendTimeframe = PERIOD_H1; // Trend timeframe
-input ENUM_TIMEFRAMES inputExecutionTimeframe = PERIOD_M15; // Execution timeframe
+input ENUM_TIMEFRAMES inputTrendTimeframe = PERIOD_H1; // Trend Time Frame
+input ENUM_TIMEFRAMES inputExecutionTimeframe = PERIOD_M15; // Execution Time Frame
 input double risk_percent = 0.01; // Risk %
 input string londonKzStart = "09:30"; // London KZ Start
 input string londonKzEnd = "12:00"; // London KZ End

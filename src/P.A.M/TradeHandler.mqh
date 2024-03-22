@@ -5,7 +5,7 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Inclue                                                           |
+//| Include                                                           |
 //+------------------------------------------------------------------+
 #include "TrendClass.mqh"
 #include "tFunctions.mqh"
@@ -74,7 +74,7 @@ class TradeHandler
             }
          }
          //+------------------------------------------------------------------+
-         //| ontick fuction()                                                 |
+         //| onTick fuction()                                                 |
          //+------------------------------------------------------------------+
          void OnTick() {
             trendClass.HandleTrend();
@@ -112,8 +112,6 @@ class TradeHandler
                      if (isAddToBreakerArray) {
                         ArrayResize(breakerBlocks, ArraySize(breakerBlocks) + 1);
                         breakerBlocks[ArraySize(breakerBlocks) - 1] = executionZone;
-
-                        DrawZone(executionZone.startTime, "PAM_12342" + ArraySize(breakerBlocks), executionZone.top, executionZone.bottom, executionZone.trend, inputExecutionTimeframe);
                      }
 
                   }
@@ -135,12 +133,47 @@ class TradeHandler
                } else if(isAsiaInitiated() && asianKZ.checkIsInKillZone(0)) {
                   isOneKillZoneActive = true;
                } else if (!isLondonInitiated() && !isNewYorkInitiated() && !isAsiaInitiated()) {
+                  // if not KZ initiated then trade all time frames
                   isOneKillZoneActive = true;
                }
             
                isInKillZone = isOneKillZoneActive;
                oncePerBarKillZone = currentExecTime;
             }
+         }
+         
+         //+------------------------------------------------------------------+
+         //| Function to handle chart events                                  |
+         //+------------------------------------------------------------------+
+         void handleChartEvent(const string &sparam) {
+             trendClass.handleButtonClick(sparam);
+             executionClass.handleButtonClick(sparam);
+             if(isLondonInitiated()) {
+               londonKZ.HandleButtonClick(sparam);
+            }
+            
+            if(isNewYorkInitiated()) {
+               newYorkKZ.HandleButtonClick(sparam);
+            }
+            
+            if(isAsiaInitiated()) {
+               asianKZ.HandleButtonClick(sparam);
+            }
+         }
+         
+         //+------------------------------------------------------------------+
+         //| Function to create or update the information box                 |
+         //+------------------------------------------------------------------+
+         void UpdateInfoBox() {
+             Comment(EA_Name, 
+             "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
+             "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
+             "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
+             "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
+             "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
+             "\nAccount Balance: ", GetAccountBalance(),
+             "\nConfirmation Count: ", trendClass.getTrendConfirmation(),
+             "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
          
          //+------------------------------------------------------------------+
@@ -184,39 +217,6 @@ class TradeHandler
                   // }
                }
             }
-         }
-         
-         //+------------------------------------------------------------------+
-         //| Function to handle chart events                                  |
-         //+------------------------------------------------------------------+
-         void handleChartEvent(const string &sparam) {
-             trendClass.handleButtonClick(sparam);
-             executionClass.handleButtonClick(sparam);
-             if(isLondonInitiated()) {
-               londonKZ.HandleButtonClick(sparam);
-            }
-            
-            if(isNewYorkInitiated()) {
-               newYorkKZ.HandleButtonClick(sparam);
-            }
-            
-            if(isAsiaInitiated()) {
-               asianKZ.HandleButtonClick(sparam);
-            }
-         }
-         
-         //+------------------------------------------------------------------+
-         //| Function to create or update the information box                 |
-         //+------------------------------------------------------------------+
-         void UpdateInfoBox() {
-             Comment(EA_Name, 
-             "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
-             "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
-             "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
-             "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
-             "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
-             "\nAccount Balance: ", GetAccountBalance(),
-             "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
          
          //+------------------------------------------------------------------+
@@ -284,6 +284,19 @@ class TradeHandler
          //+------------------------------------------------------------------+
          //| Check if price continuation off a zone                           |
          //+------------------------------------------------------------------+
+         /*
+         TESTING: trend: 1hr exec: 5min period: 01-23 - 03-24
+
+         GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
+         EURUSD: 5.83 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
+         USDCAD: FAIL
+         GBPUSD: 1.23 winRate: 30.77% short: 00.00% long: 40.00% consecLoss: 4
+         GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
+         AUDUSD: FAIL
+         USDJPY: 1.27 winRate: 31.58% short: 28.57% long: 33.33% consecLoss: 3
+         USDCHF: 0.80 winRate: 20.00% short: 00.00% long: 25.00% consecLoss: 2
+         */
+
          bool CheckPriceContinuationOffZone() {
             TrendDirection trend = trendClass.getTrend();
             TrendDirection execTrend = executionClass.getTrend();
@@ -291,20 +304,22 @@ class TradeHandler
             CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             bool isTrade = false;
-            if (EnumToString(trend) == "Down") {
-               Print("going down!");
-            } else if (EnumToString(trend) == "Up" && EnumToString(execTrend) == "Up") {
-               for (int i = 0; i < executionClass.getZoneCount(); i++) {
-                 ZoneInfo zone = executionClass.getZones(i);
-                 if (zone.trend == TREND_UP){
+
+            for (int i = 0; i < executionClass.getZoneCount(); i++) {
+               ZoneInfo zone = executionClass.getZones(i);
+               if (trend == TREND_UP && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_UP){
                   if (zone.top > prevPrevCandle.low && prevPrevCandle.high > zone.top && prevCandle.high > zone.top ) {
                      HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
                      isTrade = true;
                      break;
                   }
-                 }
+               } else if (trend == TREND_DOWN && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_DOWN) {
+                  if (prevPrevCandle.high > zone.bottom && zone.bottom > prevPrevCandle.low && zone.bottom > prevCandle.low) {
+                     HandleTrade(SELL_NOW, zone.top, currentCandle.close, "Red zone rejection");
+                     isTrade = true;
+                     break;
+                  }
                }
-               
             }
             
             return isTrade;
