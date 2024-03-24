@@ -412,7 +412,7 @@ double getRequiredMargin(double lotSize) {
 //+------------------------------------------------------------------+
 //| Handle trade                                                     |
 //+------------------------------------------------------------------+
-void HandleTrade(PositionTypes type, double priceOffset, double price, string message = ""){
+void HandleTrade(PositionTypes type, double priceOffset, double price, string message = "", double customTakeProfit = 0.00){
    // Check if there is enough equity to take the trade.
    double stoplossInPips = CalculatePipDistance(priceOffset, price);
    Print("stoplossInPips: ", (string)stoplossInPips);
@@ -430,7 +430,7 @@ void HandleTrade(PositionTypes type, double priceOffset, double price, string me
     }
    Print("lot size: ", (string)lotSize);
    
-   double takeProfit = CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now");
+   double takeProfit = customTakeProfit == 0.00 ? CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now") : customTakeProfit;
    Print("takeProfit: ", (string)takeProfit);
    
    // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price

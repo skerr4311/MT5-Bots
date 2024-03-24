@@ -298,7 +298,6 @@ class TradeHandler
 
          bool CheckPriceContinuationOffZone() {
             TrendDirection trend = trendClass.getTrend();
-            TrendDirection execTrend = executionClass.getTrend();
             CandleInfo prevPrevCandle = getCandleInfo(inputExecutionTimeframe, 2);
             CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
@@ -308,6 +307,7 @@ class TradeHandler
                ZoneInfo zone = executionClass.getZones(i);
                if (trend == TREND_UP && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_UP){
                   if (zone.top > prevPrevCandle.low && prevPrevCandle.high > zone.top && prevCandle.high > zone.top ) {
+
                      HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
                      isTrade = true;
                      break;
@@ -322,6 +322,44 @@ class TradeHandler
             }
             
             return isTrade;
+         }
+
+         //+------------------------------------------------------------------+
+         //| Get Stoploss from zone                                           |
+         //+------------------------------------------------------------------+
+         double getStopLossFromZone(TrendDirection trend, bool isTrend, double entryPrice) {
+            double stoploss = entryPrice;
+
+            if (isTrend) {
+               for (int i = 0; i < trendClass.getZoneCount(); i++) {
+                  ZoneInfo zone = trendClass.getZones(i);
+                  if (trend == TREND_UP) {
+                     if (zone.trend == TREND_DOWN && zone.bottom > entryPrice && zone.bottom > stoploss) {
+                        stoploss = zone.bottom;
+                     }
+                  } else {
+                     if (zone.trend == TREND_UP && zone.top < entryPrice && zone.top < stoploss) {
+                        stoploss = zone.top;
+                     }
+                  }
+               }
+            } else {
+               for (int i = 0; i < executionClass.getZoneCount(); i++) {
+                  ZoneInfo zone = executionClass.getZones(i);
+                  if (trend == TREND_UP) {
+                     if (zone.trend == TREND_DOWN && zone.bottom > entryPrice && zone.bottom > stoploss) {
+                        stoploss = zone.bottom;
+                     }
+                  } else {
+                     if (zone.trend == TREND_UP && zone.top < entryPrice && zone.top < stoploss) {
+                        stoploss = zone.top;
+                     }
+                  }
+               }
+            }
+
+            return stoploss == entryPrice ? 0.00 : stoploss;
+
          }
          
          //+------------------------------------------------------------------+
