@@ -5,13 +5,14 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Include                                                           |
+//| Include                                                          |
 //+------------------------------------------------------------------+
 #include "TrendClass.mqh"
 #include "tFunctions.mqh"
 #include "KillZoneClass.mqh"
 #include "iFunctions.mqh"
 #include "CommonGlobals.mqh"
+#include "PositionClass.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -31,6 +32,7 @@ class TradeHandler
          KillZone asianKZ;
          bool isInKillZone;
          ZoneInfo breakerBlocks[];
+         PositionClass positionClass;
       
       public:
          // Constructor
@@ -51,6 +53,7 @@ class TradeHandler
             
             isInKillZone = false;
             
+            positionClass.init();
             initKillZones();
          }
          
@@ -173,6 +176,7 @@ class TradeHandler
              "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
              "\nAccount Balance: ", GetAccountBalance(),
              "\nConfirmation Count: ", trendClass.getTrendConfirmation(),
+             "\nPosition Count: ", positionClass.getPositionsCount(),
              "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
          
@@ -232,7 +236,7 @@ class TradeHandler
             if (EnumToString(trend) == "Down") {
                // Check for ema rejection
                if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA){
-                  HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
+                  positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
                   return true;
                }
                
@@ -241,13 +245,13 @@ class TradeHandler
                if (prevprevCandle.high < fiftyEMA && prevCandle.close < fiftyEMA) {
                   // looking for rejection
                   if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA) {
-                     HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection up");
+                     positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection up");
                      return true;
                   }
                } else {
                   // looking for continuation
                   if(prevCandle.low < fiftyEMA && prevCandle.close > fiftyEMA) {
-                     HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
+                     positionClass.HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
                      return true;
                   }
                }
@@ -267,11 +271,11 @@ class TradeHandler
                Print("switch: ", EnumToString(trend));
                if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
                   // closePositions(1);
-                  HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
+                  positionClass.HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
                   return true;
                } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
                   // closePositions(2);
-                  HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
+                  positionClass.HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
                   return true;
                }
                
@@ -308,13 +312,13 @@ class TradeHandler
                if (trend == TREND_UP && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_UP){
                   if (zone.top > prevPrevCandle.low && prevPrevCandle.high > zone.top && prevCandle.high > zone.top ) {
 
-                     HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
+                     positionClass.HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
                      isTrade = true;
                      break;
                   }
                } else if (trend == TREND_DOWN && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_DOWN) {
                   if (prevPrevCandle.high > zone.bottom && zone.bottom > prevPrevCandle.low && zone.bottom > prevCandle.low) {
-                     HandleTrade(SELL_NOW, zone.top, currentCandle.close, "Red zone rejection");
+                     positionClass.HandleTrade(SELL_NOW, zone.top, currentCandle.close, "Red zone rejection");
                      isTrade = true;
                      break;
                   }
@@ -408,7 +412,7 @@ class TradeHandler
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
                         DrawHorizontalLineWithLabel(zone.top, clrGreen, 0, "top");
                         DrawHorizontalLineWithLabel(zone.bottom, clrGreen, 0, "bottom");
-                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
+                        positionClass.HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
          
@@ -417,7 +421,7 @@ class TradeHandler
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
                         DrawHorizontalLineWithLabel(zone.top, clrRed, 0, "top");
                         DrawHorizontalLineWithLabel(zone.bottom, clrRed, 0, "bottom");
-                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
+                        positionClass.HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }
          

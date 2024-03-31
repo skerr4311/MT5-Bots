@@ -8,17 +8,17 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "CommonGlobals.mqh"
-#include <Trade\Trade.mqh>
+#include <Trade/Trade.mqh>
 CTrade trade;
 
 // Open a market Buy order
-void BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
-   trade.Buy(volume, Symbol(), 0.0, sl, tp, comment);
+ulong BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+   return trade.Buy(volume, Symbol(), 0.0, sl, tp, comment);
 }
 
 // Open a market Sell order
-void SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
-   trade.Sell(volume, Symbol(), 0.0, sl, tp, comment);
+ulong SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+   return trade.Sell(volume, Symbol(), 0.0, sl, tp, comment);
 }
 
 // BuyLimit
@@ -199,10 +199,8 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
     double riskAmount = accountBalance * riskPercentage;
 
     double pipValue = CalculatePipValueInAccountCurrency(Symbol(), accountCurrency);
-    Print("Pip Value: $", pipValue);
 
     double totalRisk = stopLossPips * pipValue;
-    Print("Total Risk: $", totalRisk);
 
     if(totalRisk == 0) {
         Print("Error: Total risk is zero.");
@@ -210,7 +208,6 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
     }
 
     positionSize = riskAmount / totalRisk;
-    Print("Raw Position Size: ", positionSize, " lots");
 
     double lotStep = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_STEP);
     double minVolume = SymbolInfoDouble(Symbol(), SYMBOL_VOLUME_MIN);
@@ -218,8 +215,6 @@ double CalculatePositionSize(double riskPercentage, double stopLossPips, double 
 
     positionSize = NormalizeDouble(MathRound(positionSize / lotStep) * lotStep, _Digits);
     positionSize = MathMin(MathMax(positionSize, minVolume), maxVolume);
-
-    Print("Normalized Position Size: ", positionSize, " lots");
 
     return positionSize;
 }
@@ -391,10 +386,8 @@ double getRequiredMargin(double lotSize) {
         string conversionPairQuote = quoteCurrency + accountCurrency; // Quote to Account
         
         if(SymbolInfoDouble(conversionPairBase, SYMBOL_BID) > 0) {
-            Print("if!!!!!");
             conversionRate = SymbolInfoDouble(conversionPairBase, SYMBOL_BID);
         } else if(SymbolInfoDouble(conversionPairQuote, SYMBOL_BID) > 0) {
-            Print("else!!!!");
             conversionRate = 1.0 / SymbolInfoDouble(conversionPairQuote, SYMBOL_ASK); // Use ask price for buying
         } else {
             Print("Error: Unable to find a suitable conversion rate.");
@@ -406,44 +399,4 @@ double getRequiredMargin(double lotSize) {
     double requiredMarginAccountCurrency = requiredMarginBaseCurrency * conversionRate;
 
     return requiredMarginAccountCurrency;
-}
-
-
-//+------------------------------------------------------------------+
-//| Handle trade                                                     |
-//+------------------------------------------------------------------+
-void HandleTrade(PositionTypes type, double priceOffset, double price, string message = "", double customTakeProfit = 0.00){
-   // Check if there is enough equity to take the trade.
-   double stoplossInPips = CalculatePipDistance(priceOffset, price);
-   Print("stoplossInPips: ", (string)stoplossInPips);
-   
-   
-   if (stoplossInPips > maxPips || stoplossInPips < minPips) {
-      Print("Pips out of range! - pips: ", stoplossInPips);
-      return;  
-   }
-   
-   double lotSize;
-   if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {
-      Print("Failed to calculate position size!");
-      return;
-    }
-   Print("lot size: ", (string)lotSize);
-   
-   double takeProfit = customTakeProfit == 0.00 ? CalculateTakeProfit(price, priceOffset, 3.0, PositionToString(type) == "Buy Now") : customTakeProfit;
-   Print("takeProfit: ", (string)takeProfit);
-   
-   // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price
-   double requiredEquity = getRequiredMargin(lotSize);
-   
-   Print("Required Equity: ", requiredEquity);
-   
-   if(enableTrading) {
-      if (PositionToString(type) == "Sell Now") {
-         SellNow(lotSize, priceOffset, takeProfit, message);
-      } else {
-         BuyNow(lotSize, priceOffset, takeProfit, message);
-      }
-   }
-   
 }
