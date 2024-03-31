@@ -8,6 +8,7 @@
 //| Include                                                          |
 //+------------------------------------------------------------------+
 #include "tFunctions.mqh"
+#include "iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| PositionClass                                                    |
@@ -43,6 +44,21 @@ public:
     }
 
     //+------------------------------------------------------------------+
+    //| get Take profit one & two                                        |
+    //+------------------------------------------------------------------+
+    void CalculateIntermediateTakeProfits(double currentPrice, double finalTakeProfit, double &takeProfitOne, double &takeProfitTwo) {
+        double totalDistance = finalTakeProfit - currentPrice;
+        double oneThirdDistance = totalDistance / 3;
+        double twoThirdsDistance = 2 * totalDistance / 3;
+
+        takeProfitOne = currentPrice + oneThirdDistance;
+        takeProfitTwo = currentPrice + twoThirdsDistance;
+
+        DrawHorizontalLineWithLabel(takeProfitOne, clrGreen, 0, "tp1", STYLE_DOT);
+        DrawHorizontalLineWithLabel(takeProfitTwo, clrGreen, 0, "tp2", STYLE_DOT);
+    }
+
+    //+------------------------------------------------------------------+
     //| Handle trade                                                     |
     //+------------------------------------------------------------------+
     void HandleTrade(PositionTypes type, double stopLoss, double price, string message = "", double customTakeProfit = 0.00){
@@ -64,8 +80,18 @@ public:
         
         // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price
         double requiredEquity = getRequiredMargin(lotSize);
+        double freeMargin = AccountInfoDouble(ACCOUNT_FREEMARGIN);
+
+        // todo: check this against other pairs. USDJPY seems to work correctly.
+        if (requiredEquity > freeMargin) {
+            Print("Not enough free margin - Required: $", requiredEquity, " - Free Margin $", freeMargin);
+            return;
+        }
+
+        Print("required equity: ", requiredEquity);
 
         ulong positionId = 0;
+        double takeProfitOne, takeProfitTwo = takeProfit;
         
         if(enableTrading) {
             if (PositionToString(type) == "Sell Now") {
@@ -76,11 +102,12 @@ public:
         }
 
         if (positionId > 0) {
+            CalculateIntermediateTakeProfits(price, takeProfit, takeProfitOne, takeProfitTwo);
             Position position;
             position.id = positionId;
             position.stopLoss = stopLoss;
-            position.takeProfitOne = takeProfit;
-            position.takeProfitTwo = takeProfit;
+            position.takeProfitOne = takeProfitOne;
+            position.takeProfitTwo = takeProfitTwo;
             position.takeProfitThree = takeProfit;
             ArrayResize(positions, ArraySize(positions) + 1);
             positions[ArraySize(positions) - 1] = position;

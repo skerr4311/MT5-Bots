@@ -59,7 +59,7 @@ void CreateSingleButton(string rectName, string textName, string buttonText, lon
 //+------------------------------------------------------------------+
 //| Draw Horizontail line with label function                        |
 //+------------------------------------------------------------------+
-void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, string labelText) {
+void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, string labelText, ENUM_LINE_STYLE lineStyle = STYLE_SOLID) {
     string lineName = "PAM_TrendLine_" + IntegerToString(GetTickCount());  // Unique name for the line
     string labelName = "PAM_Label_" + lineName;  // Unique name for the label
     int firstBarIndex = candleId + 6;  // Last 6 candles
@@ -77,7 +77,7 @@ void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, st
 
     // Set line properties
     ObjectSetInteger(0, lineName, OBJPROP_COLOR, lineColor);
-    ObjectSetInteger(0, lineName, OBJPROP_STYLE, STYLE_SOLID);
+    ObjectSetInteger(0, lineName, OBJPROP_STYLE, lineStyle);
     ObjectSetInteger(0, lineName, OBJPROP_WIDTH, 1);  // Width of the line
 
     // Create the label
