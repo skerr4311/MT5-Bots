@@ -224,7 +224,7 @@ double CalculatePipDistance(double price1, double price2) {
 //+------------------------------------------------------------------+
 double AdjustPriceByPipSize(double price, int pips, PipActionTypes action ) {
     long digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
-    double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;
+    double pipSize = (digits == 3) ? 0.01 : 0.0001;
     
     if (action == ADD) {
       return price + (pipSize * pips);
@@ -238,7 +238,7 @@ double AdjustPriceByPipSize(double price, int pips, PipActionTypes action ) {
 //+------------------------------------------------------------------+
 double CalculateTakeProfit(double entryPrice, double stopLoss, double riskRewardRatio, bool isBuy) {
     long digits = SymbolInfoInteger(Symbol(), SYMBOL_DIGITS);
-    double pipSize = (digits == 5 || digits == 3) ? 0.00010 : 0.01;  // Adjust pip size for JPY pairs
+    double pipSize = (digits == 3) ? 0.01 : 0.0001;  // Adjust pip size for JPY pairs
 
     // Calculate the distance between entry price and stop loss in pips
     double riskDistance = MathAbs(entryPrice - stopLoss) / pipSize;

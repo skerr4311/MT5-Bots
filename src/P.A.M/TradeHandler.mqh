@@ -302,13 +302,19 @@ class TradeHandler
          TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
 
          GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
+         * GBPJPY: 0.54 winRate: 52.63% short: 100.00% long: 43.75% consecLoss: 2
          EURUSD: 5.83 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
+         * EURUSD: 5.84 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
          USDCAD: FAIL
+         * USDCAD: Survived in the negatives
          GBPUSD: 1.23 winRate: 30.77% short: 00.00% long: 40.00% consecLoss: 4
+         * GBPUSD: 1.95 winRate: 57.14% short: 25.00% long: 70.00% consecLoss: 1
          AUDUSD: FAIL
+         * AUDUSD: 0.14 winRate: 50.00% short: 100.00% long: 33.33% consecLoss: 2
          USDJPY: 1.27 winRate: 31.58% short: 28.57% long: 33.33% consecLoss: 3
-         * USDJPY: 1.07 winRate: 21.05% short: 0.0% long: 33.33% consecLoss: 4
+         * USDJPY: 1.07 winRate: 52.63% short: 28.57% long: 66.67% consecLoss: 3
          USDCHF: 0.80 winRate: 20.00% short: 00.00% long: 25.00% consecLoss: 2
+         * USDCHF: 0.00 winRate: 00.00% short: 00.00% long: 00.00% consecLoss: 2
          */
 
          bool CheckPriceContinuationOffZone() {
