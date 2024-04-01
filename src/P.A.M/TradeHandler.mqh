@@ -76,6 +76,7 @@ class TradeHandler
                asianKZ.SetInitialMarketTrend();
             }
          }
+
          //+------------------------------------------------------------------+
          //| onTick fuction()                                                 |
          //+------------------------------------------------------------------+
@@ -85,8 +86,17 @@ class TradeHandler
             CheckIfInKillZone();
             checkForBreakerBlock();
             checkForEntry();
+            positionClass.HandleOpenPositions();
             UpdateInfoBox();
          }
+
+         //+------------------------------------------------------------------+
+         //| onTrade fuction()                                                 |
+         //+------------------------------------------------------------------+
+         void OnTrade() {
+            positionClass.HandleOnTradeFunction();
+         }
+
 
          //+------------------------------------------------------------------+
          //| Check for breaker block                                          |
@@ -297,6 +307,7 @@ class TradeHandler
          GBPUSD: 1.23 winRate: 30.77% short: 00.00% long: 40.00% consecLoss: 4
          AUDUSD: FAIL
          USDJPY: 1.27 winRate: 31.58% short: 28.57% long: 33.33% consecLoss: 3
+         * USDJPY: 1.07 winRate: 21.05% short: 0.0% long: 33.33% consecLoss: 4
          USDCHF: 0.80 winRate: 20.00% short: 00.00% long: 25.00% consecLoss: 2
          */
 

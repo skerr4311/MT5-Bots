@@ -12,12 +12,12 @@
 CTrade trade;
 
 // Open a market Buy order
-ulong BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+bool BuyNow(double volume, double sl = 0, double tp = 0, string comment = "") {
    return trade.Buy(volume, Symbol(), 0.0, sl, tp, comment);
 }
 
 // Open a market Sell order
-ulong SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
+bool SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
    return trade.Sell(volume, Symbol(), 0.0, sl, tp, comment);
 }
 
@@ -29,61 +29,15 @@ ulong SellNow(double volume, double sl = 0, double tp = 0, string comment = "") 
 
 // SellStop
 
-//+------------------------------------------------------------------+
-//| Count open positions function                                    |
-//+------------------------------------------------------------------+
-bool countOpenPositions(int &buyCount, int &sellCount)
-  {
-
-   buyCount    = 0;
-   sellCount   = 0;
-   int total = PositionsTotal();
-   for(int i = total-1; i>=0; i--)
-     {
-      ulong ticket = PositionGetTicket(i);
-      if(ticket<=0)
-        {
-         Print("Failed to get position ticket");
-         return false;
-        }
-      if(!PositionSelectByTicket(ticket))
-        {
-         Print("Failed to select position");
-         return false;
-        }
-      long magic;
-      if(!PositionGetInteger(POSITION_MAGIC,magic))
-        {
-         Print("Failed to get position magic number");
-         return false;
-        }
-      if(magic==magicNumber)
-        {
-         long type;
-         if(!PositionGetInteger(POSITION_TYPE,type))
-           {
-            Print("Failed to get position type");
-            return false;
-           }
-         if(type==POSITION_TYPE_BUY)
-           {
-            buyCount++;
-           }
-         if(type==POSITION_TYPE_SELL)
-           {
-            sellCount++;
-           }
-        }
-     }
-   return true;
-  }
+// Modify existing Position
+bool ModifyPosition(ulong ticket, double stoploss, double takeprofit){
+  return trade.PositionModify(ticket, stoploss, takeprofit);
+}
 
 //+------------------------------------------------------------------+
 //| Normalize price function                                         |
 //+------------------------------------------------------------------+
-bool normalizePrice(double &price)
-  {
-
+bool normalizePrice(double &price) {
    double tickSize=0;
    if(!SymbolInfoDouble(_Symbol,SYMBOL_TRADE_TICK_SIZE,tickSize))
      {
@@ -93,83 +47,40 @@ bool normalizePrice(double &price)
    price = NormalizeDouble(MathRound(price/tickSize)*tickSize,_Digits);
 
    return true;
-  }
-
+}
 
 //+------------------------------------------------------------------+
-//| Close all positions function                                     |
-//| 0 = all; 1 = buys; 2 = sells;                                    |
+//| Check if position is active                                      |
 //+------------------------------------------------------------------+
-bool closePositions(int all_buy_sell)
-  {
-   int total = PositionsTotal();
-   for(int i = total-1; i>=0; i--)
-     {
-      ulong ticket = PositionGetTicket(i);
-      if(ticket<=0)
-        {
-         Print("Failed to get position ticket");
-         return false;
-        }
-      if(!PositionSelectByTicket(ticket))
-        {
-         Print("Failed to select position");
-         return false;
-        }
-      long magic;
-      if(!PositionGetInteger(POSITION_MAGIC,magic))
-        {
-         Print("Failed to get position magic number");
-         return false;
-        }
-      if(magic==magicNumber)
-        {
-         long type;
-         if(!PositionGetInteger(POSITION_TYPE,type))
-           {
-            Print("Failed to get position type");
-            return false;
-           }
-         if(all_buy_sell==1 && type==POSITION_TYPE_SELL)
-           {
-            continue;
-           }
-         if(all_buy_sell==2 && type==POSITION_TYPE_BUY)
-           {
-            continue;
-           }
-         trade.PositionClose(ticket);
-         if(trade.ResultRetcode()!=TRADE_RETCODE_DONE)
-           {
-            Print("Failed to close position. ticket:",
-                  (string)ticket, " result:", (string)trade.ResultRetcode(), ":",trade.CheckResultRetcodeDescription());
-           }
-        }
-     }
-   return true;
-  }
+bool isPositionActive(ulong ticket) {
+  return PositionSelectByTicket(ticket);
+}
 
 //+------------------------------------------------------------------+
 //| Get Account Balance                                              |
 //+------------------------------------------------------------------+
-double GetAccountBalance()
-  {
+double GetAccountBalance() {
    return AccountInfoDouble(ACCOUNT_BALANCE);
-  }
+}
   
 //+------------------------------------------------------------------+
 //| Get account equity                                               |
 //+------------------------------------------------------------------+
-double GetAccountEquity()
-  {
+double GetAccountEquity() {
    return AccountInfoDouble(ACCOUNT_EQUITY);
-  }
+}
+
+//+------------------------------------------------------------------+
+//| Get available margin                                             |
+//+------------------------------------------------------------------+
+double GetAvailableMargin() {
+   return AccountInfoDouble(ACCOUNT_FREEMARGIN);
+}
 
 //+------------------------------------------------------------------+
 //| Get current profit                                               |
 //+------------------------------------------------------------------+
-double GetCurrentProfit()
-  {
+double GetCurrentProfit() {
    double totalProfit = 0;
    for(int i = 0; i < PositionsTotal(); i++)
      {
@@ -180,15 +91,44 @@ double GetCurrentProfit()
         }
      }
    return totalProfit;
-  }
+}
+
+// Helper function to convert position type enum to string
+string PositionTypeToString(ENUM_POSITION_TYPE type) {
+    switch(type) {
+        case POSITION_TYPE_BUY: return "Buy";
+        case POSITION_TYPE_SELL: return "Sell";
+        default: return "Unknown";
+    }
+}
+
+// Function to calculate the new price with an adjustment of custom pips
+double AdjustOpenPrice(double openPrice, int digits, bool isBuy, int pips = 3) {
+    double pipSize = (digits == 3) ? 0.01 : 0.0001;
+    double adjustment = pips * pipSize;
+    double newOpenPrice = isBuy ? openPrice + adjustment : openPrice - adjustment;
+    return newOpenPrice;
+}
+
+//+------------------------------------------------------------------+
+//| get Take profit one & two                                        |
+//+------------------------------------------------------------------+
+void CalculateIntermediateTakeProfits(double currentPrice, double finalTakeProfit, double &takeProfitOne, double &takeProfitTwo, double &takeProfitJump) {
+    double totalDistance = finalTakeProfit - currentPrice;
+    double oneThirdDistance = totalDistance / 3;
+    double twoThirdsDistance = 2 * totalDistance / 3;
+
+    takeProfitOne = currentPrice + oneThirdDistance;
+    takeProfitTwo = currentPrice + twoThirdsDistance;
+    takeProfitJump = oneThirdDistance;
+}
 
 //+------------------------------------------------------------------+
 //| Get account currency                                             |
 //+------------------------------------------------------------------+
-string GetAccountCurrency()
-  {
+string GetAccountCurrency() {
    return AccountInfoString(ACCOUNT_CURRENCY);
-  }
+}
 
 //+------------------------------------------------------------------+
 //| Calculate position size                                          |

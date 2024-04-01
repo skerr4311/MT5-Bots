@@ -16,11 +16,16 @@
 class PositionClass {
 private:
    struct Position {
-      ulong id;
-      double stopLoss;
-      double takeProfitOne;
-      double takeProfitTwo;
-      double takeProfitThree;
+        ulong ticket;
+        string symbol;
+        double volume;
+        double openPrice;
+        double stopLoss;
+        double takeProfitOne;
+        double takeProfitTwo;
+        double takeProfitThree;
+        double takeProfitJump;
+        string type;
    };
    Position positions[];
     
@@ -44,19 +49,74 @@ public:
     }
 
     //+------------------------------------------------------------------+
-    //| get Take profit one & two                                        |
+    //| Handle open positions                                            |
     //+------------------------------------------------------------------+
-    void CalculateIntermediateTakeProfits(double currentPrice, double finalTakeProfit, double &takeProfitOne, double &takeProfitTwo) {
-        double totalDistance = finalTakeProfit - currentPrice;
-        double oneThirdDistance = totalDistance / 3;
-        double twoThirdsDistance = 2 * totalDistance / 3;
+    void HandleOpenPositions() {
+        for(int i = 0; i < getPositionsCount(); i++) {
+            Position position = positions[i];
+            double close = getClose(inputExecutionTimeframe, 0);
+            int digits = SymbolInfoInteger(position.symbol, SYMBOL_DIGITS);
+            bool isBuy = position.type == "Buy";
+            double adjustedOpenPrice = AdjustOpenPrice(position.openPrice, digits, isBuy);
+            Print("Original: ", position.openPrice, " - Altered: ", adjustedOpenPrice);
 
-        takeProfitOne = currentPrice + oneThirdDistance;
-        takeProfitTwo = currentPrice + twoThirdsDistance;
-
-        DrawHorizontalLineWithLabel(takeProfitOne, clrGreen, 0, "tp1", STYLE_DOT);
-        DrawHorizontalLineWithLabel(takeProfitTwo, clrGreen, 0, "tp2", STYLE_DOT);
+            if(isBuy) {
+                if (close > position.takeProfitOne && position.stopLoss != adjustedOpenPrice) {
+                    // set stoploss = openPrice;
+                    ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree);
+                    Print("Buy adjusted tp1");
+                } else if (close > position.takeProfitTwo && position.stopLoss != position.takeProfitOne) {
+                    // set stoploss = takeprofitOne;
+                    ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree);
+                    Print("Buy adjusted tp2");
+                }
+            } else {
+                if (close < position.takeProfitOne && position.stopLoss != adjustedOpenPrice) {
+                    // set stoploss = openPrice;
+                    ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree);
+                    Print("Sell adjusted tp1");
+                } else if (close < position.takeProfitTwo && position.stopLoss != position.takeProfitOne) {
+                    // set stoploss = takeprofitOne;
+                    ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree);
+                    Print("Sell adjusted tp2");
+                }
+            }
+        }
     }
+
+    //+------------------------------------------------------------------+
+    //| Handle open positions                                            |
+    //+------------------------------------------------------------------+
+    void HandleOnTradeFunction() {
+        int totalPositions = PositionsTotal();
+        CPositionInfo positionInfo;
+        ArrayResize(positions, 0);
+
+        // Iterate through only open positions and pairs the advisor is looking at
+        for(int i = 0; i < totalPositions; ++i) {
+            if(positionInfo.SelectByIndex(i) && positionInfo.Symbol() == Symbol()) {
+                double openPrice = positionInfo.PriceOpen();
+                double takeProfit = positionInfo.TakeProfit();
+                double takeProfitOne, takeProfitTwo, takeProfitJump;
+                CalculateIntermediateTakeProfits(openPrice, takeProfit, takeProfitOne, takeProfitTwo, takeProfitJump);
+
+                Position position;
+                position.ticket = positionInfo.Ticket();
+                position.symbol = positionInfo.Symbol();
+                position.volume = positionInfo.Volume();
+                position.openPrice = openPrice;
+                position.stopLoss = positionInfo.StopLoss();
+                position.takeProfitOne = takeProfitOne;
+                position.takeProfitTwo = takeProfitTwo;
+                position.takeProfitThree = takeProfit;
+                position.takeProfitJump = takeProfitJump;
+                position.type = PositionTypeToString(positionInfo.PositionType());
+                ArrayResize(positions, ArraySize(positions) + 1);
+                positions[ArraySize(positions) - 1] = position;
+            }
+        }
+    }
+
 
     //+------------------------------------------------------------------+
     //| Handle trade                                                     |
@@ -80,41 +140,21 @@ public:
         
         // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price
         double requiredEquity = getRequiredMargin(lotSize);
-        double freeMargin = AccountInfoDouble(ACCOUNT_FREEMARGIN);
+        double freeMargin = GetAvailableMargin();
 
         // todo: check this against other pairs. USDJPY seems to work correctly.
         if (requiredEquity > freeMargin) {
             Print("Not enough free margin - Required: $", requiredEquity, " - Free Margin $", freeMargin);
             return;
         }
-
-        Print("required equity: ", requiredEquity);
-
-        ulong positionId = 0;
-        double takeProfitOne, takeProfitTwo = takeProfit;
         
         if(enableTrading) {
             if (PositionToString(type) == "Sell Now") {
-                positionId = SellNow(lotSize, stopLoss, takeProfit, message);
+                SellNow(lotSize, stopLoss, takeProfit, message);
             } else if (PositionToString(type) == "Buy Now") {
-                positionId = BuyNow(lotSize, stopLoss, takeProfit, message);
+                BuyNow(lotSize, stopLoss, takeProfit, message);
             }
         }
-
-        if (positionId > 0) {
-            CalculateIntermediateTakeProfits(price, takeProfit, takeProfitOne, takeProfitTwo);
-            Position position;
-            position.id = positionId;
-            position.stopLoss = stopLoss;
-            position.takeProfitOne = takeProfitOne;
-            position.takeProfitTwo = takeProfitTwo;
-            position.takeProfitThree = takeProfit;
-            ArrayResize(positions, ArraySize(positions) + 1);
-            positions[ArraySize(positions) - 1] = position;
-        } else {
-            Print("Failed to open position. Error code: ", GetLastError());
-        }
-    
     }
     
 };
