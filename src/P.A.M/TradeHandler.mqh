@@ -83,10 +83,16 @@ class TradeHandler
          void OnTick() {
             trendClass.HandleTrend();
             executionClass.HandleTrend();
-            CheckIfInKillZone();
-            checkForBreakerBlock();
-            checkForEntry();
-            positionClass.HandleOpenPositions();
+            if (target_profit > GetAccountBalance()) {
+               CheckIfInKillZone();
+               checkForBreakerBlock();
+               checkForEntry();
+               positionClass.HandleOpenPositions();
+            } else {
+               if (positionClass.getPositionsCount() > 0) {
+                  positionClass.CloseAllOpenPositions();
+               }
+            }
             UpdateInfoBox();
          }
 

@@ -117,6 +117,27 @@ public:
         }
     }
 
+    //+------------------------------------------------------------------+
+    //| Close all open positions                                         |
+    //+------------------------------------------------------------------+
+    void CloseAllOpenPositions() {
+        bool result;
+        
+        for(int i = ArraySize(positions) - 1; i >= 0; i--) {
+            ulong ticket = positions[i].ticket;
+            result = ClosePosition(ticket);
+            
+            if(result) {
+                PrintFormat("Closed position %d for symbol %s successfully.", ticket, positions[i].symbol);
+            } else {
+                PrintFormat("Failed to close position %d for symbol %s.", ticket, positions[i].symbol);
+            }
+        }
+        
+        ArrayResize(positions, 0);
+    }
+
+
 
     //+------------------------------------------------------------------+
     //| Handle trade                                                     |

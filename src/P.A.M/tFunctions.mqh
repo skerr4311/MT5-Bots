@@ -34,6 +34,11 @@ bool ModifyPosition(ulong ticket, double stoploss, double takeprofit){
   return trade.PositionModify(ticket, stoploss, takeprofit);
 }
 
+// Close existing Position
+bool ClosePosition(ulong ticket){
+  return trade.PositionClose(ticket);
+}
+
 //+------------------------------------------------------------------+
 //| Normalize price function                                         |
 //+------------------------------------------------------------------+
