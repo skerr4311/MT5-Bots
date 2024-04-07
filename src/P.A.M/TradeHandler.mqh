@@ -195,6 +195,30 @@ class TradeHandler
              "\nPosition Count: ", positionClass.getPositionsCount(),
              "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
+
+         /*
+         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
+          - CheckTrendDirectionChange
+          - CheckPriceContinuationOffZone
+          - CheckRejectionOffEma (Trend Time)
+
+         GBPJPY: -$540.63
+         * No protection - tapped out GROSS 50K!
+         EURUSD: -$73.19
+         * Tapped out very quickly
+         USDCAD: $1,651.40
+         * Tapped out very quickly
+         GBPUSD: Tapped out
+         * tapped ut fairly quickly
+         AUDUSD: $711.88
+         * tapped out semi quickly
+         USDJPY: -$952.10
+         * tapped out two months
+         USDCHF: tapped out
+         * tapped out quick
+
+         * no protection is no good
+         */
          
          //+------------------------------------------------------------------+
          //| Check for entry                                                  |
@@ -216,51 +240,62 @@ class TradeHandler
                      currentExecTime = currentExecTime;
                      return;
                   }
-                  */
+                  
                   // check three
                   if(CheckRejectionOffEma()){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
-                  /*
+                  
                   if(CheckPriceContinuationOffZone()){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
                   */
+                  
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
                if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
-                  // if (CheckRejectionOffEma()) {
-                     // oncePerBarTrend = currentTrendTime;
-                     // return;
-                  // }
+                  if (CheckRejectionOffEma()) {
+                     oncePerBarTrend = currentTrendTime;
+                     return;
+                  }
                }
             }
-         }
+         }         
          
          //+------------------------------------------------------------------+
          //| Check rejection off EMA                                          |
          //+------------------------------------------------------------------+
          /*
-         TESTING: trend: 1hr exec: 5min period: 01-01-24 - 23-03-24
+         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
 
-         GBPJPY: 0.55 winRate: 45.45% short: 27.50% long: 66.67% consecLoss: 2 drawdown: 1.75%
-         EURUSD: 1.06 winRate: 57.14% short: 66.67% long: 50.00% consecLoss: 2 drawdown: 2.85%
-         USDCAD: 1.95 winRate: 57.14% short: 60.00% long: 50:00% consecLoss: 2 drawdown: 1.13%
-         GBPUSD: 0.99 winRate: 40.00% short: 66.67% long: 00.00% consecLoss: 2 drawdown: 2.05%
-         AUDUSD: 0.02 winRate: 14.29% short: 00.00% long: 25:00% consecLoss: 3 drawdown: 5.32%
-         USDJPY: 0.02 winRate: 11.11% short: 16.67% long: 00.00% consecLoss: 4 drawdown: 3.70%
-         USDCHF: 1.01 winRate: 50.00% short: 50.00% long: 50.00% consecLoss: 2 drawdown: 2.72%
+         GBPJPY: 0.83 winRate: 44.68% short: 31.58% long: 53.57% consecLoss: 2 drawdown: 5.48%
+         * GBPJPY: 0.50 winRate: 41.67% short: 46.67% long: 16.67% consecLoss: 3 drawdown: 5.56%
+         EURUSD: 0.97 winRate: 56.52% short: 42.86% long: 62.50% consecLoss: 2 drawdown: 4.52%
+         * EURUSD: 1.06 winRate: 38.89% short: 40.00% long: 37.50% consecLoss: 2 drawdown: 7.07%
+         USDCAD: 1.59 winRate: 55.88% short: 53.33% long: 57.89% consecLoss: 2 drawdown: 3.84%
+         * USDCAD: 1.02 winRate: 43.75% short: 40.00% long: 50.00% consecLoss: 2 drawdown: 3.28%
+         GBPUSD: FAILED
+         * GBPUSD: 1.46 winRate: 47.83% short: 47.06% long: 50.00% consecLoss: 2 drawdown: 5.83%
+         AUDUSD: 1.31 winRate: 43.75% short: 71.43% long: 22.22% consecLoss: 2 drawdown: 3.90%
+         * AUDUSD: 1.03 winRate: 47.06% short: 33.33% long: 80.00% consecLoss: 2 drawdown: 4.76%
+         USDJPY: 0.64 winRate: 37.50% short: 31.25% long: 43.75% consecLoss: 3 drawdown: 5.95%
+         * USDJPY: 1.21 winRate: 46.67% short: 47.37% long: 45.45% consecLoss: 3 drawdown: 3.36%
+         USDCHF: FAIL
+         * USDCHF: 0.69 winRate: 43.75% short: 33.33% long: 57.14% consecLoss: 2 drawdown: 5.46%
          */
          bool CheckRejectionOffEma() {
             double fiftyEMA = GetEMAForBar(0, inputTrendTimeframe, 50);
             TrendDirection trend = trendClass.getTrend();
-            CandleInfo prevprevCandle = getCandleInfo(inputExecutionTimeframe, 2);
+            CandleInfo prevPrevCandle = getCandleInfo(inputExecutionTimeframe, 2);
+            CandleInfo prevPrevH1Candle = getCandleInfo(inputTrendTimeframe, 2);
             CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
+            CandleInfo prevH1Candle = getCandleInfo(inputTrendTimeframe, 1);
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             
+            // Origonal
             if (EnumToString(trend) == "Down") {
                // Check for ema rejection
                if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA){
@@ -270,7 +305,7 @@ class TradeHandler
                
             } else if (EnumToString(trend) == "Up") {
                // Check for ema rejection
-               if (prevprevCandle.high < fiftyEMA && prevCandle.close < fiftyEMA) {
+               if (prevPrevCandle.high < fiftyEMA && prevCandle.close < fiftyEMA) {
                   // looking for rejection
                   if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA) {
                      positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection up");
@@ -285,12 +320,49 @@ class TradeHandler
                }
             }
             
+
+           /* Improvement attempt
+           if (EnumToString(trend) == "Down") {
+               // Check for ema rejection
+               if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA && prevH1Candle.low < fiftyEMA && prevH1Candle.high < fiftyEMA){
+                  positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
+                  return true;
+               }
+               
+            } else if (EnumToString(trend) == "Up") {
+               // Check for ema rejection
+               if (prevPrevCandle.high < fiftyEMA && prevCandle.close > fiftyEMA && prevH1Candle.high > fiftyEMA && prevH1Candle.low > fiftyEMA) {
+                  positionClass.HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
+                  return true;
+               }
+            }
+            */
+           
+         //   if (isCandleWickedBelowTrendEma(1) && isCandleWickedBelowTrendEma(2)) {
+         //    positionClass.HandleTrade(SELL_NOW, prevH1Candle.high, currentCandle.close, "50ema rejection down");
+         //    return true;
+         //   } else if (isCandleWickedAboveTrendEma(1) && isCandleWickedAboveTrendEma(2)) {
+         //    positionClass.HandleTrade(BUY_NOW, prevH1Candle.low, currentCandle.close, "50ema continuation up");
+         //    return true;
+         //   }
+            
             return false;
          }
          
          //+------------------------------------------------------------------+
          //| Check trend direction                                            |
          //+------------------------------------------------------------------+
+         /*
+         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
+
+         GBPJPY: FAIL
+         EURUSD: FAIL
+         USDCAD: SUPER FAIL!
+         GBPUSD: FAIL
+         AUDUSD: FAIL
+         USDJPY: FAIL
+         USDCHF: FAIL
+         */
          bool CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
             executionArrow = executionClass.getTrend();
