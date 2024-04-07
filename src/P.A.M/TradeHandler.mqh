@@ -216,17 +216,18 @@ class TradeHandler
                      currentExecTime = currentExecTime;
                      return;
                   }
-                  
+                  */
                   // check three
                   if(CheckRejectionOffEma()){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
-                  */
+                  /*
                   if(CheckPriceContinuationOffZone()){
                      oncePerBarExec = currentExecTime;
                      return;
                   }
+                  */
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
@@ -242,6 +243,17 @@ class TradeHandler
          //+------------------------------------------------------------------+
          //| Check rejection off EMA                                          |
          //+------------------------------------------------------------------+
+         /*
+         TESTING: trend: 1hr exec: 5min period: 01-01-24 - 23-03-24
+
+         GBPJPY: 0.55 winRate: 45.45% short: 27.50% long: 66.67% consecLoss: 2 drawdown: 1.75%
+         EURUSD: 1.06 winRate: 57.14% short: 66.67% long: 50.00% consecLoss: 2 drawdown: 2.85%
+         USDCAD: 1.95 winRate: 57.14% short: 60.00% long: 50:00% consecLoss: 2 drawdown: 1.13%
+         GBPUSD: 0.99 winRate: 40.00% short: 66.67% long: 00.00% consecLoss: 2 drawdown: 2.05%
+         AUDUSD: 0.02 winRate: 14.29% short: 00.00% long: 25:00% consecLoss: 3 drawdown: 5.32%
+         USDJPY: 0.02 winRate: 11.11% short: 16.67% long: 00.00% consecLoss: 4 drawdown: 3.70%
+         USDCHF: 1.01 winRate: 50.00% short: 50.00% long: 50.00% consecLoss: 2 drawdown: 2.72%
+         */
          bool CheckRejectionOffEma() {
             double fiftyEMA = GetEMAForBar(0, inputTrendTimeframe, 50);
             TrendDirection trend = trendClass.getTrend();
@@ -284,7 +296,6 @@ class TradeHandler
             executionArrow = executionClass.getTrend();
             
             if (trendArrow != trend) {
-               Print("switch: ", EnumToString(trend));
                if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
                   // closePositions(1);
                   positionClass.HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
