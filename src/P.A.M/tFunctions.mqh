@@ -27,7 +27,10 @@ bool SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
 
 // SellLimit
 
-// SellStop
+// Sell Stop
+bool SellStop(double volume, double price, double sl = 0, double tp = 0, datetime expiry = 0, string comment = "") {
+    return trade.SellStop(volume, price, Symbol(), sl, tp, ORDER_TIME_GTC, expiry, comment);
+}
 
 // Modify existing Position
 bool ModifyPosition(ulong ticket, double stoploss, double takeprofit){

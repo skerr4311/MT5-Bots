@@ -50,6 +50,8 @@ struct CandleInfo {
    double open;
    double close;
    bool isBull;
+   double bottomOfTopWick;
+   double topOfBottomWick;
 };
 
 //+------------------------------------------------------------------+

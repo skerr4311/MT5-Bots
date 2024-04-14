@@ -48,25 +48,34 @@ double getClose(ENUM_TIMEFRAMES timeframe, int candleId) {
 }
 
 //+------------------------------------------------------------------+
-//| check if bear candle                                             |
+//| check if bull candle                                             |
 //+------------------------------------------------------------------+
-double isBearCandle(ENUM_TIMEFRAMES timeframe, int candleId) {
-   double close = getClose(timeframe, candleId);
-   double open = getOpen(timeframe, candleId);
-   
+double isBullCandle(double close, double open) {
    return close > open;
 }
+
+
 
 //+------------------------------------------------------------------+
 //| get candle info                                                  |
 //+------------------------------------------------------------------+
 CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
+   double high = getHigh(timeframe, candleId);
+   double low = getLow(timeframe, candleId);
+   double open = getOpen(timeframe, candleId);
+   double close = getClose(timeframe, candleId); 
+   bool isBull = isBullCandle(close, open);
+   double bottomOfTopWick = isBull ? close : open;
+   double topOfBottomWick = isBull ? open : close;
+
    CandleInfo info;
-   info.close = getClose(timeframe, candleId);
-   info.high = getHigh(timeframe, candleId);
-   info.isBull = !isBearCandle(timeframe, candleId);
-   info.low = getLow(timeframe, candleId);
-   info.open = getOpen(timeframe, candleId);
+   info.close = close;
+   info.high = high;
+   info.isBull = isBull;
+   info.low = low;
+   info.open = open;
+   info.bottomOfTopWick = bottomOfTopWick;
+   info.topOfBottomWick = topOfBottomWick;
 
    return info;
 }

@@ -49,7 +49,7 @@ class TradeHandler
             executionArrow = executionClass.getTrend();
             
             oncePerBarExec = getTime(inputExecutionTimeframe, 0);
-            oncePerBarTrend = getTime(inputExecutionTimeframe, 0);
+            oncePerBarTrend = getTime(inputTrendTimeframe, 0);
             
             isInKillZone = false;
             
@@ -226,41 +226,31 @@ class TradeHandler
          void checkForEntry() {
             if(isInKillZone) {
                datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
-               if(currentExecTime != oncePerBarExec && CalculateSpread() < 3.0) {
-                  /*
-                  // check one
-                  if(CheckPriceRejection(1, trendClass.getTrend())){
-                     oncePerBarExec = currentExecTime;
-                     return;
+               if(currentExecTime != oncePerBarExec) {  // Ensure this runs only once per bar
+                  if (CalculateSpread() < 3.0) {
+                     // Combined check for all conditions
+                     bool shouldExecuteTrade = 
+                           //CheckPriceRejection(1, trendClass.getTrend()) ||  // Uncomment and use if needed
+                           //CheckTrendDirectionChange() ||  // Uncomment and use if needed
+                           //CheckRejectionOffEma() // ||
+                           CheckPriceContinuationOffZone();
+
+                     if (shouldExecuteTrade) {
+                           oncePerBarExec = currentExecTime;  // Update the execution timestamp after any condition is true
+                           Print("Trade executed or operation performed for the current bar: ", currentExecTime);
+                           return;
+                     }
                   }
-                  
-                  
-                  // check two
-                  if(CheckTrendDirectionChange()) {
-                     currentExecTime = currentExecTime;
-                     return;
-                  }
-                  
-                  // check three
-                  if(CheckRejectionOffEma()){
-                     oncePerBarExec = currentExecTime;
-                     return;
-                  }
-                  
-                  if(CheckPriceContinuationOffZone()){
-                     oncePerBarExec = currentExecTime;
-                     return;
-                  }
-                  */
-                  
+               } else {
+                  Print("Attempt to execute multiple times in the same bar prevented.");
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
                if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
-                  if (CheckRejectionOffEma()) {
-                     oncePerBarTrend = currentTrendTime;
-                     return;
-                  }
+                  // if (CheckRejectionOffEma()) {
+                  //    oncePerBarTrend = currentTrendTime;
+                  //    return;
+                  // }
                }
             }
          }         
@@ -268,83 +258,22 @@ class TradeHandler
          //+------------------------------------------------------------------+
          //| Check rejection off EMA                                          |
          //+------------------------------------------------------------------+
-         /*
-         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-
-         GBPJPY: 0.83 winRate: 44.68% short: 31.58% long: 53.57% consecLoss: 2 drawdown: 5.48%
-         * GBPJPY: 0.50 winRate: 41.67% short: 46.67% long: 16.67% consecLoss: 3 drawdown: 5.56%
-         EURUSD: 0.97 winRate: 56.52% short: 42.86% long: 62.50% consecLoss: 2 drawdown: 4.52%
-         * EURUSD: 1.06 winRate: 38.89% short: 40.00% long: 37.50% consecLoss: 2 drawdown: 7.07%
-         USDCAD: 1.59 winRate: 55.88% short: 53.33% long: 57.89% consecLoss: 2 drawdown: 3.84%
-         * USDCAD: 1.02 winRate: 43.75% short: 40.00% long: 50.00% consecLoss: 2 drawdown: 3.28%
-         GBPUSD: FAILED
-         * GBPUSD: 1.46 winRate: 47.83% short: 47.06% long: 50.00% consecLoss: 2 drawdown: 5.83%
-         AUDUSD: 1.31 winRate: 43.75% short: 71.43% long: 22.22% consecLoss: 2 drawdown: 3.90%
-         * AUDUSD: 1.03 winRate: 47.06% short: 33.33% long: 80.00% consecLoss: 2 drawdown: 4.76%
-         USDJPY: 0.64 winRate: 37.50% short: 31.25% long: 43.75% consecLoss: 3 drawdown: 5.95%
-         * USDJPY: 1.21 winRate: 46.67% short: 47.37% long: 45.45% consecLoss: 3 drawdown: 3.36%
-         USDCHF: FAIL
-         * USDCHF: 0.69 winRate: 43.75% short: 33.33% long: 57.14% consecLoss: 2 drawdown: 5.46%
-         */
          bool CheckRejectionOffEma() {
             double fiftyEMA = GetEMAForBar(0, inputTrendTimeframe, 50);
             TrendDirection trend = trendClass.getTrend();
             CandleInfo prevPrevCandle = getCandleInfo(inputExecutionTimeframe, 2);
-            CandleInfo prevPrevH1Candle = getCandleInfo(inputTrendTimeframe, 2);
             CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
-            CandleInfo prevH1Candle = getCandleInfo(inputTrendTimeframe, 1);
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
-            
-            // Origonal
-            if (EnumToString(trend) == "Down") {
-               // Check for ema rejection
-               if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA){
-                  positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
-                  return true;
-               }
-               
-            } else if (EnumToString(trend) == "Up") {
-               // Check for ema rejection
-               if (prevPrevCandle.high < fiftyEMA && prevCandle.close < fiftyEMA) {
-                  // looking for rejection
-                  if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA) {
-                     positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection up");
-                     return true;
-                  }
-               } else {
-                  // looking for continuation
-                  if(prevCandle.low < fiftyEMA && prevCandle.close > fiftyEMA) {
-                     positionClass.HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
-                     return true;
-                  }
-               }
-            }
-            
 
-           /* Improvement attempt
-           if (EnumToString(trend) == "Down") {
-               // Check for ema rejection
-               if(prevCandle.high > fiftyEMA && prevCandle.close < fiftyEMA && prevH1Candle.low < fiftyEMA && prevH1Candle.high < fiftyEMA){
-                  positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
-                  return true;
-               }
-               
-            } else if (EnumToString(trend) == "Up") {
-               // Check for ema rejection
-               if (prevPrevCandle.high < fiftyEMA && prevCandle.close > fiftyEMA && prevH1Candle.high > fiftyEMA && prevH1Candle.low > fiftyEMA) {
-                  positionClass.HandleTrade(BUY_NOW, prevCandle.low, currentCandle.close, "50ema continuation up");
-                  return true;
+            if(trend == TREND_DOWN) {
+               if((prevPrevCandle.high < fiftyEMA) || (prevPrevCandle.high > fiftyEMA && prevPrevCandle.topOfBottomWick < fiftyEMA)) {
+                  if (prevCandle.high >= fiftyEMA) {
+                     if (prevCandle.bottomOfTopWick < fiftyEMA) {
+                        positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
+                     }
+                  }
                }
             }
-            */
-           
-         //   if (isCandleWickedBelowTrendEma(1) && isCandleWickedBelowTrendEma(2)) {
-         //    positionClass.HandleTrade(SELL_NOW, prevH1Candle.high, currentCandle.close, "50ema rejection down");
-         //    return true;
-         //   } else if (isCandleWickedAboveTrendEma(1) && isCandleWickedAboveTrendEma(2)) {
-         //    positionClass.HandleTrade(BUY_NOW, prevH1Candle.low, currentCandle.close, "50ema continuation up");
-         //    return true;
-         //   }
             
             return false;
          }
@@ -354,14 +283,6 @@ class TradeHandler
          //+------------------------------------------------------------------+
          /*
          TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-
-         GBPJPY: FAIL
-         EURUSD: FAIL
-         USDCAD: SUPER FAIL!
-         GBPUSD: FAIL
-         AUDUSD: FAIL
-         USDJPY: FAIL
-         USDCHF: FAIL
          */
          bool CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
@@ -389,21 +310,6 @@ class TradeHandler
          //+------------------------------------------------------------------+
          /*
          TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-
-         GBPJPY: 1.88 winRate: 38.89% short: 66.67% long: 33.33% consecLoss: 9
-         * GBPJPY: 0.54 winRate: 52.63% short: 100.00% long: 43.75% consecLoss: 2
-         EURUSD: 5.83 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
-         * EURUSD: 5.84 winRate: 66.67% short: 66.67% long: 66.67% consecLoss: 2
-         USDCAD: FAIL
-         * USDCAD: Survived in the negatives
-         GBPUSD: 1.23 winRate: 30.77% short: 00.00% long: 40.00% consecLoss: 4
-         * GBPUSD: 1.95 winRate: 57.14% short: 25.00% long: 70.00% consecLoss: 1
-         AUDUSD: FAIL
-         * AUDUSD: 0.14 winRate: 50.00% short: 100.00% long: 33.33% consecLoss: 2
-         USDJPY: 1.27 winRate: 31.58% short: 28.57% long: 33.33% consecLoss: 3
-         * USDJPY: 1.07 winRate: 52.63% short: 28.57% long: 66.67% consecLoss: 3
-         USDCHF: 0.80 winRate: 20.00% short: 00.00% long: 25.00% consecLoss: 2
-         * USDCHF: 0.00 winRate: 00.00% short: 00.00% long: 00.00% consecLoss: 2
          */
 
          bool CheckPriceContinuationOffZone() {
@@ -413,22 +319,22 @@ class TradeHandler
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             bool isTrade = false;
 
-            for (int i = 0; i < executionClass.getZoneCount(); i++) {
-               ZoneInfo zone = executionClass.getZones(i);
-               if (trend == TREND_UP && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_UP){
-                  if (zone.top > prevPrevCandle.low && prevPrevCandle.high > zone.top && prevCandle.high > zone.top ) {
-
-                     positionClass.HandleTrade(BUY_NOW, zone.bottom, currentCandle.close, "Green zone rejection");
-                     isTrade = true;
-                     break;
-                  }
-               } else if (trend == TREND_DOWN && trendClass.getTrendConfirmation() > 1 && zone.trend == TREND_DOWN) {
-                  if (prevPrevCandle.high > zone.bottom && zone.bottom > prevPrevCandle.low && zone.bottom > prevCandle.low) {
-                     positionClass.HandleTrade(SELL_NOW, zone.top, currentCandle.close, "Red zone rejection");
-                     isTrade = true;
-                     break;
-                  }
+            if (trend == TREND_DOWN){
+               DrawHorizontalLineWithLabel(currentCandle.close, clrRed, 0, "LABEL", "trend");
+               for (int i = 0; i < executionClass.getZoneCount(); i++) {
+                  ZoneInfo zone = executionClass.getZones(i);
+                  if (zone.trend == TREND_DOWN){
+                     // Looking for continuation
+                     if (prevCandle.bottomOfTopWick > zone.bottom && prevCandle.high < zone.midPrice) {
+                        if (prevPrevCandle.bottomOfTopWick > zone.bottom && prevPrevCandle.high < zone.midPrice) {
+                           DrawHorizontalLineWithLabel(zone.midPrice, clrPurple, 0, "LABEL", IntegerToString(i));
+                           positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Zone continuation");
+                        }
+                     }
+                  } 
                }
+            } else {
+               DrawHorizontalLineWithLabel(currentCandle.close, clrGreen, 0, "LABEL", "trend");
             }
             
             return isTrade;
@@ -516,8 +422,6 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        DrawHorizontalLineWithLabel(zone.top, clrGreen, 0, "top");
-                        DrawHorizontalLineWithLabel(zone.bottom, clrGreen, 0, "bottom");
                         positionClass.HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
                         return true;
                      }
@@ -525,8 +429,6 @@ class TradeHandler
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        DrawHorizontalLineWithLabel(zone.top, clrRed, 0, "top");
-                        DrawHorizontalLineWithLabel(zone.bottom, clrRed, 0, "bottom");
                         positionClass.HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
                         return true;
                      }

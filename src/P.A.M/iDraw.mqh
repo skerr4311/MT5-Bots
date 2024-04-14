@@ -59,8 +59,8 @@ void CreateSingleButton(string rectName, string textName, string buttonText, lon
 //+------------------------------------------------------------------+
 //| Draw Horizontail line with label function                        |
 //+------------------------------------------------------------------+
-void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, string labelText, ENUM_LINE_STYLE lineStyle = STYLE_SOLID) {
-    string lineName = "PAM_TrendLine_" + IntegerToString(GetTickCount());  // Unique name for the line
+void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, string labelText, string idName, ENUM_LINE_STYLE lineStyle = STYLE_SOLID) {
+    string lineName = "PAM_TrendLine_" + idName;  // Unique name for the line
     string labelName = "PAM_Label_" + lineName;  // Unique name for the label
     int firstBarIndex = candleId + 6;  // Last 6 candles
     int lastBarIndex = candleId;   // Current candle
@@ -69,30 +69,43 @@ void DrawHorizontalLineWithLabel(double level, color lineColor, int candleId, st
     datetime timeLast = iTime(_Symbol, _Period, lastBarIndex);
     datetime timeMiddle = iTime(_Symbol, _Period, candleId + 3);
 
-    // Create the trend line
-    if(!ObjectCreate(0, lineName, OBJ_TREND, 0, timeFirst, level, timeLast, level)) {
-        Print("Failed to create trend line: ", GetLastError());
-        return;
+    if(ObjectFind(0, lineName) == -1) {
+        // Create the trend line
+        if(!ObjectCreate(0, lineName, OBJ_TREND, 0, timeFirst, level, timeLast, level)) {
+            Print("Failed to create trend line: ", GetLastError());
+            return;
+        }
+
+        // Set line properties
+        ObjectSetInteger(0, lineName, OBJPROP_COLOR, lineColor);
+        ObjectSetInteger(0, lineName, OBJPROP_STYLE, lineStyle);
+        ObjectSetInteger(0, lineName, OBJPROP_WIDTH, 1);  // Width of the line
+    } else {
+        // If the text object exists, move it to the new location
+        ObjectMove(0, lineName, 0, timeFirst, level);
+        ObjectMove(0, lineName, 1, timeLast, level);
+        ObjectSetInteger(0, lineName, OBJPROP_COLOR, lineColor);
     }
+    //*****  
+    if(ObjectFind(0, lineName) == -1) {
+        // Create the label
+        if(!ObjectCreate(0, labelName, OBJ_TEXT, 0, timeMiddle, level)) {
+            Print("Failed to create label: ", GetLastError());
+            return;
+        }
 
-    // Set line properties
-    ObjectSetInteger(0, lineName, OBJPROP_COLOR, lineColor);
-    ObjectSetInteger(0, lineName, OBJPROP_STYLE, lineStyle);
-    ObjectSetInteger(0, lineName, OBJPROP_WIDTH, 1);  // Width of the line
-
-    // Create the label
-    if(!ObjectCreate(0, labelName, OBJ_TEXT, 0, timeMiddle, level)) {
-        Print("Failed to create label: ", GetLastError());
-        return;
+        // Set label properties
+        ObjectSetString(0, labelName, OBJPROP_TEXT, labelText);
+        ObjectSetInteger(0, labelName, OBJPROP_COLOR, lineColor);
+        ObjectSetInteger(0, labelName, OBJPROP_CORNER, CORNER_RIGHT_UPPER);
+        ObjectSetInteger(0, labelName, OBJPROP_XDISTANCE, 10); // Adjust for exact positioning
+        ObjectSetInteger(0, labelName, OBJPROP_YDISTANCE, 30); // Distance from the top, adjust as needed
+        ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);  // Font size
+    } else {
+        // If the text object exists, move it to the new location
+        ObjectMove(0, labelName, 0, timeMiddle, level);
+        ObjectSetInteger(0, labelName, OBJPROP_COLOR, lineColor);
     }
-
-    // Set label properties
-    ObjectSetString(0, labelName, OBJPROP_TEXT, labelText);
-    ObjectSetInteger(0, labelName, OBJPROP_COLOR, lineColor);
-    ObjectSetInteger(0, labelName, OBJPROP_CORNER, CORNER_RIGHT_UPPER);
-    ObjectSetInteger(0, labelName, OBJPROP_XDISTANCE, 10); // Adjust for exact positioning
-    ObjectSetInteger(0, labelName, OBJPROP_YDISTANCE, 30); // Distance from the top, adjust as needed
-    ObjectSetInteger(0, labelName, OBJPROP_FONTSIZE, 9);  // Font size
 }
 
 //+------------------------------------------------------------------+

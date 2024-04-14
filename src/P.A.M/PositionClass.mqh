@@ -137,6 +137,54 @@ public:
         ArrayResize(positions, 0);
     }
 
+    //+------------------------------------------------------------------+
+    //| Check and manage pending orders                                  |
+    //+------------------------------------------------------------------+
+    // void ManagePendingOrders() {
+    //     int totalOrders = OrdersTotal();
+    //     datetime oldestTime = TimeCurrent(); // Get current server time
+    //     ulong oldestTicket = 0;
+        
+    //     // Iterate through all orders to find the oldest pending order
+    //     for (int i = 0; i < totalOrders; i++) {
+    //         if (OrderSelect(i, SELECT_BY_POS)) {
+    //             if (OrderType() <= ORDER_TYPE_SELL_STOP && OrderSymbol() == Symbol()) {
+    //                 if (OrderTime() < oldestTime) {
+    //                     oldestTime = OrderTime();
+    //                     oldestTicket = OrderTicket();
+    //                 }
+    //             }
+    //         }
+    //     }
+        
+    //     // Check if the oldest order is older than 3 hours
+    //     if (TimeCurrent() - oldestTime > 3 * 60 * 60) {
+    //         // If the oldest order is older than 3 hours, delete it
+    //         if (oldestTicket != 0) {
+    //             if (!OrderDelete(oldestTicket)) {
+    //                 Print("Failed to delete order ", oldestTicket, ": ", GetLastError());
+    //             } else {
+    //                 Print("Deleted old order ", oldestTicket);
+    //             }
+    //         }
+    //     }
+        
+    //     // Ensure only one pending order exists at any time
+    //     // This logic assumes you want to keep only the latest pending order
+    //     if (OrdersTotal() > 1) {
+    //         for (int i = 0; i < OrdersTotal(); i++) {
+    //             if (OrderSelect(i, SELECT_BY_POS) && OrderTicket() != oldestTicket && OrderType() <= ORDER_TYPE_SELL_STOP) {
+    //                 if (!OrderDelete(OrderTicket())) {
+    //                     Print("Failed to delete extra order ", OrderTicket(), ": ", GetLastError());
+    //                 } else {
+    //                     Print("Deleted extra pending order ", OrderTicket());
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+
 
 
     //+------------------------------------------------------------------+
@@ -170,10 +218,12 @@ public:
         }
         
         if(enableTrading) {
-            if (PositionToString(type) == "Sell Now") {
+            if (type == SELL_NOW) {
                 SellNow(lotSize, stopLoss, takeProfit, message);
-            } else if (PositionToString(type) == "Buy Now") {
+            } else if (type == BUY_NOW) {
                 BuyNow(lotSize, stopLoss, takeProfit, message);
+            } else if (type == SELL_STOP) {
+                SellStop(lotSize, price, stopLoss, takeProfit, 0, message);
             }
         }
     }

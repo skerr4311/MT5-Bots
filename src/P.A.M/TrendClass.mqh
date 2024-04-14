@@ -72,7 +72,7 @@ public:
       isEMAVisible = timeframe == inputTrendTimeframe ? true : false;
       zoneButtonRectName = "PAM_" + IntegerToString(timeframe) + "_ToggleZone_Rect";
       zoneButtonTextName = "PAM_" + IntegerToString(timeframe) + "_ToggleZone_Text";
-      isZoneVisible = timeframe == inputExecutionTimeframe ? true : false;
+      isZoneVisible = true; // timeframe == inputExecutionTimeframe ? true : false;
       dropdownButtonRectName = "PAM_ToggleDropdownRect_" + IntegerToString(timeframe);
       dropdownButtonTextName = "PAM_ToggleDropdownText_" + IntegerToString(timeframe);
       isDropdownVisible = timeframe == inputTrendTimeframe ? true : false;
