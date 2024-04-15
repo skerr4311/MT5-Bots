@@ -24,6 +24,9 @@ bool SellNow(double volume, double sl = 0, double tp = 0, string comment = "") {
 // BuyLimit
 
 // BuyStop
+bool BuyStop(double volume, double price, double sl = 0, double tp = 0, datetime expiry = 0, string comment = "") {
+    return trade.BuyStop(volume, price, Symbol(), sl, tp, ORDER_TIME_GTC, expiry, comment);
+}
 
 // SellLimit
 
@@ -40,6 +43,11 @@ bool ModifyPosition(ulong ticket, double stoploss, double takeprofit){
 // Close existing Position
 bool ClosePosition(ulong ticket){
   return trade.PositionClose(ticket);
+}
+
+// Close Pending Order
+bool ClosePendingOrder(ulong ticket){
+    return trade.OrderDelete(ticket);
 }
 
 //+------------------------------------------------------------------+

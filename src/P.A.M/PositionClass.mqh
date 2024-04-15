@@ -58,27 +58,59 @@ public:
             int digits = SymbolInfoInteger(position.symbol, SYMBOL_DIGITS);
             bool isBuy = position.type == "Buy";
             double adjustedOpenPrice = AdjustOpenPrice(position.openPrice, digits, isBuy);
-            Print("Original: ", position.openPrice, " - Altered: ", adjustedOpenPrice);
+
 
             if(isBuy) {
-                if (close > position.takeProfitOne && position.stopLoss != adjustedOpenPrice) {
-                    // set stoploss = openPrice;
-                    ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree);
-                    Print("Buy adjusted tp1");
-                } else if (close > position.takeProfitTwo && position.stopLoss != position.takeProfitOne) {
+                if (close > position.takeProfitTwo + (position.takeProfitJump / 2)) {
+                    // set stoploss = takeprofitTwo;
+                    if (position.stopLoss != position.takeProfitTwo) {
+                        if(ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree)) {
+                            positions[i].stopLoss = position.takeProfitTwo;
+                        }
+                        Print("Buy adjusted tp2");
+                    }
+                } else if (close > position.takeProfitTwo) {
                     // set stoploss = takeprofitOne;
-                    ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree);
-                    Print("Buy adjusted tp2");
+                    if (position.stopLoss < position.takeProfitOne) {
+                        if (ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree)) {
+                            positions[i].stopLoss = position.takeProfitOne;
+                        }
+                        Print("Buy adjusted tp1");
+                    }
+                } else if (close > position.takeProfitOne) {
+                    // set stoploss = openPrice;
+                    if (position.stopLoss < adjustedOpenPrice) {
+                        if (ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree)) {
+                            positions[i].stopLoss = adjustedOpenPrice;
+                        }
+                        Print("Break even hit");
+                    }
                 }
             } else {
-                if (close < position.takeProfitOne && position.stopLoss != adjustedOpenPrice) {
-                    // set stoploss = openPrice;
-                    ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree);
-                    Print("Sell adjusted tp1");
-                } else if (close < position.takeProfitTwo && position.stopLoss != position.takeProfitOne) {
+                if (close < position.takeProfitTwo + (position.takeProfitJump / 2)) {
+                    // set stoploss = takeprofitTwo;
+                    if (position.stopLoss != position.takeProfitTwo) {
+                        if (ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree)) {
+                            positions[i].stopLoss = position.takeProfitTwo;
+                        }
+                        Print("Buy adjusted tp2");
+                    }
+                } else if (close < position.takeProfitTwo) {
                     // set stoploss = takeprofitOne;
-                    ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree);
-                    Print("Sell adjusted tp2");
+                    if (position.stopLoss > position.takeProfitOne) {
+                        if (ModifyPosition(position.ticket, position.takeProfitOne, position.takeProfitThree)) {
+                            positions[i].stopLoss = position.takeProfitOne;
+                        }
+                        Print("Buy adjusted tp1");
+                    }
+                } else if (close < position.takeProfitOne) {
+                    // set stoploss = openPrice;
+                    if (position.stopLoss > adjustedOpenPrice) {
+                        if (ModifyPosition(position.ticket, adjustedOpenPrice, position.takeProfitThree)) {
+                            positions[i].stopLoss = adjustedOpenPrice;
+                        }
+                        Print("Break even hit");
+                    }
                 }
             }
         }
@@ -138,54 +170,31 @@ public:
     }
 
     //+------------------------------------------------------------------+
-    //| Check and manage pending orders                                  |
+    //| Cancel all pending orders for the current symbol                 |
     //+------------------------------------------------------------------+
-    // void ManagePendingOrders() {
-    //     int totalOrders = OrdersTotal();
-    //     datetime oldestTime = TimeCurrent(); // Get current server time
-    //     ulong oldestTicket = 0;
-        
-    //     // Iterate through all orders to find the oldest pending order
-    //     for (int i = 0; i < totalOrders; i++) {
-    //         if (OrderSelect(i, SELECT_BY_POS)) {
-    //             if (OrderType() <= ORDER_TYPE_SELL_STOP && OrderSymbol() == Symbol()) {
-    //                 if (OrderTime() < oldestTime) {
-    //                     oldestTime = OrderTime();
-    //                     oldestTicket = OrderTicket();
-    //                 }
-    //             }
-    //         }
-    //     }
-        
-    //     // Check if the oldest order is older than 3 hours
-    //     if (TimeCurrent() - oldestTime > 3 * 60 * 60) {
-    //         // If the oldest order is older than 3 hours, delete it
-    //         if (oldestTicket != 0) {
-    //             if (!OrderDelete(oldestTicket)) {
-    //                 Print("Failed to delete order ", oldestTicket, ": ", GetLastError());
-    //             } else {
-    //                 Print("Deleted old order ", oldestTicket);
-    //             }
-    //         }
-    //     }
-        
-    //     // Ensure only one pending order exists at any time
-    //     // This logic assumes you want to keep only the latest pending order
-    //     if (OrdersTotal() > 1) {
-    //         for (int i = 0; i < OrdersTotal(); i++) {
-    //             if (OrderSelect(i, SELECT_BY_POS) && OrderTicket() != oldestTicket && OrderType() <= ORDER_TYPE_SELL_STOP) {
-    //                 if (!OrderDelete(OrderTicket())) {
-    //                     Print("Failed to delete extra order ", OrderTicket(), ": ", GetLastError());
-    //                 } else {
-    //                     Print("Deleted extra pending order ", OrderTicket());
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    void CancelAllPendingOrders() {
+        int totalOrders = OrdersTotal();
+        ulong orderTicket;
+        ENUM_ORDER_TYPE orderType;
+        string orderSymbol;
 
+        // Iterate over all orders in a reverse manner to avoid indexing issues after deletion
+        for (int i = totalOrders - 1; i >= 0; i--) {
+            orderTicket = OrderGetTicket(i); // Directly get the order ticket
+            orderType = (ENUM_ORDER_TYPE)OrderGetInteger(ORDER_TYPE);
+            orderSymbol = OrderGetString(ORDER_SYMBOL);
 
-
+            // Check if the order belongs to the current symbol and is a pending order
+            if (orderSymbol == Symbol() && orderType >= ORDER_TYPE_BUY_LIMIT && orderType <= ORDER_TYPE_SELL_STOP_LIMIT) {
+                // Try to delete the order and check for errors
+                if (!ClosePendingOrder(orderTicket)) {
+                    Print("Failed to delete order ", orderTicket, ": ", GetLastError());
+                } else {
+                    Print("Order ", orderTicket, " deleted successfully.");
+                }
+            }
+        }
+    }
 
     //+------------------------------------------------------------------+
     //| Handle trade                                                     |
@@ -204,9 +213,9 @@ public:
             Print("Failed to calculate position size!");
             return;
             }
+        bool isBuy = StringFind(PositionToString(type), "Buy") != -1;
         // todo: handle more than just buy and sell
-        double takeProfit = CalculateTakeProfit(price, stopLoss, customTakeProfit == 0.00 ? 3.0 : customTakeProfit, PositionToString(type) == "Buy Now");
-        
+        double takeProfit = CalculateTakeProfit(price, stopLoss, customTakeProfit == 0.00 ? 3.0 : customTakeProfit, isBuy);
         // Required Margin = (Lot Size * Contract Size / Leverage) * Market Price
         double requiredEquity = getRequiredMargin(lotSize);
         double freeMargin = GetAvailableMargin();
@@ -224,6 +233,8 @@ public:
                 BuyNow(lotSize, stopLoss, takeProfit, message);
             } else if (type == SELL_STOP) {
                 SellStop(lotSize, price, stopLoss, takeProfit, 0, message);
+            } else if (type == BUY_STOP) {
+                BuyStop(lotSize, price, stopLoss, takeProfit, 0, message);
             }
         }
     }

@@ -188,7 +188,7 @@ class TradeHandler
              "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
              "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
-             "\nExecute Direction: ", IntegerToString(executionClass.getZoneCount()),
+             "\nExecute Zone count: ", IntegerToString(executionClass.getZoneCount()),
              "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
              "\nAccount Balance: ", GetAccountBalance(),
              "\nConfirmation Count: ", trendClass.getTrendConfirmation(),
@@ -241,8 +241,6 @@ class TradeHandler
                            return;
                      }
                   }
-               } else {
-                  Print("Attempt to execute multiple times in the same bar prevented.");
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
@@ -319,22 +317,54 @@ class TradeHandler
             CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             bool isTrade = false;
 
-            if (trend == TREND_DOWN){
-               DrawHorizontalLineWithLabel(currentCandle.close, clrRed, 0, "LABEL", "trend");
-               for (int i = 0; i < executionClass.getZoneCount(); i++) {
-                  ZoneInfo zone = executionClass.getZones(i);
+            positionClass.CancelAllPendingOrders();
+            // Execution Zones
+            for (int i = 0; i < executionClass.getZoneCount(); i++) {
+               ZoneInfo zone = executionClass.getZones(i);
+               if (trend == TREND_DOWN){
                   if (zone.trend == TREND_DOWN){
                      // Looking for continuation
                      if (prevCandle.bottomOfTopWick > zone.bottom && prevCandle.high < zone.midPrice) {
                         if (prevPrevCandle.bottomOfTopWick > zone.bottom && prevPrevCandle.high < zone.midPrice) {
-                           DrawHorizontalLineWithLabel(zone.midPrice, clrPurple, 0, "LABEL", IntegerToString(i));
-                           positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Zone continuation");
+                           positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Down trend Exec Zone continuation");
+                           return true;
                         }
                      }
                   } 
                }
-            } else {
-               DrawHorizontalLineWithLabel(currentCandle.close, clrGreen, 0, "LABEL", "trend");
+            }
+            // Trend Zones
+            for (int z = 0; z < trendClass.getZoneCount(); z++) {
+               ZoneInfo zone = trendClass.getZones(z);
+               if (trend == TREND_DOWN){
+                  if (zone.trend == TREND_DOWN) {
+                     // Looking for continuation
+
+                     // Looking for rejection
+                     // DrawHorizontalLineWithLabel(zone.top, clrAqua, 0, "LABEL", IntegerToString(z));
+                     if (prevPrevCandle.low > zone.top) {
+                        if (zone.top > prevCandle.low) {
+                           if (prevCandle.topOfBottomWick > zone.top) {
+                              DrawHorizontalLineWithLabel(currentCandle.close, clrGreen, 0, "LABEL", "buystop");
+                              positionClass.HandleTrade(BUY_STOP, zone.bottom, prevCandle.high, "Down trend Zone rejection");
+                              return true;
+                           }
+                        }
+                     }
+                  }
+               } else if (trend == TREND_UP) {
+                  if (zone.trend == TREND_UP) {
+                     // Looking for continuation
+
+                     // Looking for rejection
+                     if (prevPrevCandle.high < zone.bottom ) {
+                        if (prevCandle.high > zone.bottom && prevCandle.bottomOfTopWick < zone.bottom) {
+                           positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Up trend Zone rejection");
+                           return true;
+                        }
+                     }
+                  }
+               }
             }
             
             return isTrade;
