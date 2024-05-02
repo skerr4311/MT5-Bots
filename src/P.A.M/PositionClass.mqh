@@ -64,8 +64,10 @@ public:
                 if (close > position.takeProfitTwo + (position.takeProfitJump / 2)) {
                     // set stoploss = takeprofitTwo;
                     if (position.stopLoss != position.takeProfitTwo) {
-                        if(ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree)) {
+                        if(ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree + position.takeProfitJump )) {
                             positions[i].stopLoss = position.takeProfitTwo;
+                            positions[i].takeProfitTwo = position.takeProfitTwo + position.takeProfitJump;
+                            positions[i].takeProfitThree = position.takeProfitThree + position.takeProfitJump;
                         }
                         Print("Buy adjusted tp2");
                     }
@@ -90,8 +92,10 @@ public:
                 if (close < position.takeProfitTwo + (position.takeProfitJump / 2)) {
                     // set stoploss = takeprofitTwo;
                     if (position.stopLoss != position.takeProfitTwo) {
-                        if (ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree)) {
+                        if (ModifyPosition(position.ticket, position.takeProfitTwo, position.takeProfitThree + position.takeProfitJump)) {
                             positions[i].stopLoss = position.takeProfitTwo;
+                            positions[i].takeProfitTwo = position.takeProfitTwo + position.takeProfitJump;
+                            positions[i].takeProfitThree = position.takeProfitThree + position.takeProfitJump;
                         }
                         Print("Buy adjusted tp2");
                     }
