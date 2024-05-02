@@ -231,7 +231,7 @@ class TradeHandler
                      // Combined check for all conditions
                      bool shouldExecuteTrade = 
                            //CheckPriceRejection(1, trendClass.getTrend()) ||  // Uncomment and use if needed
-                           //CheckTrendDirectionChange() ||  // Uncomment and use if needed
+                           CheckTrendDirectionChange() ||
                            //CheckRejectionOffEma() // ||
                            CheckPriceContinuationOffZone();
 
@@ -285,16 +285,17 @@ class TradeHandler
          bool CheckTrendDirectionChange() {
             TrendDirection trend = trendClass.getTrend();
             executionArrow = executionClass.getTrend();
+            CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
             
             if (trendArrow != trend) {
                if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
                   // closePositions(1);
-                  positionClass.HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
-                  return true;
+                  DrawHorizontalLineWithLabel(currentCandle.close, clrAqua, 0, "LABEL", IntegerToString(0));
+                  // return positionClass.HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
                } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
                   // closePositions(2);
-                  positionClass.HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
-                  return true;
+                  DrawHorizontalLineWithLabel(currentCandle.close, clrAqua, 0, "LABEL", IntegerToString(1));
+                  // return positionClass.HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
                }
                
                trendArrow = trend;
@@ -339,15 +340,24 @@ class TradeHandler
                if (trend == TREND_DOWN){
                   if (zone.trend == TREND_DOWN) {
                      // Looking for continuation
+                     /*
+                     Three conditions:
+                     1. the wick was just shy
+                     2. the zone was wicked
+                     3. the prev candle was inside the zone but the current closed below.
+                     */
+                     if ((zone.bottom > prevPrevCandle.high && CalculatePipDifference(zone.bottom, prevPrevCandle.high) < 5.0) || (prevPrevCandle.high > zone.bottom && prevPrevCandle.bottomOfTopWick < zone.bottom)) {
+                        if (zone.bottom > prevCandle.high) {
+                           return positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Down trend high Zone rejection");
+                        }
+                     }
 
                      // Looking for rejection
                      // DrawHorizontalLineWithLabel(zone.top, clrAqua, 0, "LABEL", IntegerToString(z));
                      if (prevPrevCandle.low > zone.top) {
                         if (zone.top > prevCandle.low) {
                            if (prevCandle.topOfBottomWick > zone.top) {
-                              DrawHorizontalLineWithLabel(currentCandle.close, clrGreen, 0, "LABEL", "buystop");
-                              positionClass.HandleTrade(BUY_STOP, zone.bottom, prevCandle.high, "Down trend Zone rejection");
-                              return true;
+                              return positionClass.HandleTrade(BUY_STOP, zone.bottom, prevCandle.high, "Down trend Zone rejection");
                            }
                         }
                      }
@@ -359,10 +369,16 @@ class TradeHandler
                      // Looking for rejection
                      if (prevPrevCandle.high < zone.bottom ) {
                         if (prevCandle.high > zone.bottom && prevCandle.bottomOfTopWick < zone.bottom) {
-                           positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Up trend Zone rejection");
-                           return true;
+                           return positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Up trend Zone rejection");
                         }
                      }
+                  } else {
+                     // look for rejection of red zone higher than price
+                     // if (prevPrevCandle.high > zone.bottom && prevPrevCandle.high < zone.top) {
+                     //    if (prevCandle.close < zone.bottom) {
+                     //       return positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Up trend red Zone rejection");
+                     //    }
+                     // }
                   }
                }
             }

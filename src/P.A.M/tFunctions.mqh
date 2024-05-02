@@ -66,6 +66,29 @@ bool normalizePrice(double &price) {
 }
 
 //+------------------------------------------------------------------+
+//| Calculate the number of pips between two prices                  |
+//+------------------------------------------------------------------+
+double CalculatePipDifference(double price1, double price2) {
+    // Get the symbol for the current chart
+    string symbol = Symbol();
+
+    // Get the number of digits after the decimal point for the symbol
+    int digits = SymbolInfoInteger(symbol, SYMBOL_DIGITS);
+
+    // Calculate the point size based on the digits
+    double pointSize = MathPow(10, -digits);
+
+    // Calculate the difference in points
+    double differenceInPoints = MathAbs(price1 - price2);
+
+    // Convert the points to pips based on whether it's a normal pair or a JPY pair
+    double pips = (StringFind(symbol, "JPY") != -1) ? differenceInPoints / 0.01 : differenceInPoints / pointSize;
+
+    return pips;
+}
+
+
+//+------------------------------------------------------------------+
 //| Check if position is active                                      |
 //+------------------------------------------------------------------+
 bool isPositionActive(ulong ticket) {

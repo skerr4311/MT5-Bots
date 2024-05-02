@@ -199,19 +199,19 @@ public:
     //+------------------------------------------------------------------+
     //| Handle trade                                                     |
     //+------------------------------------------------------------------+
-    void HandleTrade(PositionTypes type, double stopLoss, double price, string message = "", double customTakeProfit = 0.00){
+    bool HandleTrade(PositionTypes type, double stopLoss, double price, string message = "", double customTakeProfit = 0.00){
         // Check if there is enough equity to take the trade.
         double stoplossInPips = CalculatePipDistance(stopLoss, price);
         
         if (stoplossInPips > maxPips || stoplossInPips < minPips) {
             Print("Pips out of range! - pips: ", stoplossInPips);
-            return;  
+            return false;  
         }
         
         double lotSize;
         if(!CalculatePositionSize(risk_percent, stoplossInPips, lotSize)) {
             Print("Failed to calculate position size!");
-            return;
+            return false;
             }
         bool isBuy = StringFind(PositionToString(type), "Buy") != -1;
         // todo: handle more than just buy and sell
@@ -223,20 +223,22 @@ public:
         // todo: check this against other pairs. USDJPY seems to work correctly.
         if (requiredEquity > freeMargin) {
             Print("Not enough free margin - Required: $", requiredEquity, " - Free Margin $", freeMargin);
-            return;
+            return false;
         }
         
         if(enableTrading) {
             if (type == SELL_NOW) {
-                SellNow(lotSize, stopLoss, takeProfit, message);
+                return SellNow(lotSize, stopLoss, takeProfit, message);
             } else if (type == BUY_NOW) {
-                BuyNow(lotSize, stopLoss, takeProfit, message);
+                return BuyNow(lotSize, stopLoss, takeProfit, message);
             } else if (type == SELL_STOP) {
-                SellStop(lotSize, price, stopLoss, takeProfit, 0, message);
+                return SellStop(lotSize, price, stopLoss, takeProfit, 0, message);
             } else if (type == BUY_STOP) {
-                BuyStop(lotSize, price, stopLoss, takeProfit, 0, message);
+                return BuyStop(lotSize, price, stopLoss, takeProfit, 0, message);
             }
         }
+
+        return false;
     }
     
 };
