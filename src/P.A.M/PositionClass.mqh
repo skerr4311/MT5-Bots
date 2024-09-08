@@ -240,6 +240,8 @@ public:
             } else if (type == BUY_STOP) {
                 return BuyStop(lotSize, price, stopLoss, takeProfit, 0, message);
             }
+        } else {
+            Print("Trading NOT enabled: ", PositionToString(type),"lotSize: ", lotSize, "SL: ", stopLoss, "TP: ", takeProfit, "message: ", message );
         }
 
         return false;
