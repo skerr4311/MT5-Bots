@@ -20,31 +20,16 @@ datetime getTime(ENUM_TIMEFRAMES timeframe, int candleId) {
 }
   
 //+------------------------------------------------------------------+
-//| get High of candle                                               |
+//| get candle value                                                 |
 //+------------------------------------------------------------------+
-double getHigh(ENUM_TIMEFRAMES timeframe, int candleId) {
-   return iHigh(Symbol(), timeframe, candleId);
-}
-
-//+------------------------------------------------------------------+
-//| get low of candle                                                |
-//+------------------------------------------------------------------+
-double getLow(ENUM_TIMEFRAMES timeframe, int candleId) {
-   return iLow(Symbol(), timeframe, candleId);
-}
-
-//+------------------------------------------------------------------+
-//| get Open of candle                                               |
-//+------------------------------------------------------------------+
-double getOpen(ENUM_TIMEFRAMES timeframe, int candleId) {
-   return iOpen(Symbol(), timeframe, candleId);
-}
-
-//+------------------------------------------------------------------+
-//| get Close of candle                                              |
-//+------------------------------------------------------------------+
-double getClose(ENUM_TIMEFRAMES timeframe, int candleId) {
-   return iClose(Symbol(), timeframe, candleId);
+double getCandleValue(ENUM_TIMEFRAMES timeframe, int candleId, ENUM_CANDLE_PROPERTY property) {
+    switch (property) {
+        case CANDLE_OPEN: return iOpen(Symbol(), timeframe, candleId);
+        case CANDLE_CLOSE: return iClose(Symbol(), timeframe, candleId);
+        case CANDLE_HIGH: return iHigh(Symbol(), timeframe, candleId);
+        case CANDLE_LOW: return iLow(Symbol(), timeframe, candleId);
+        default: return 0.0;
+    }
 }
 
 //+------------------------------------------------------------------+
@@ -60,10 +45,10 @@ double isBullCandle(double close, double open) {
 //| get candle info                                                  |
 //+------------------------------------------------------------------+
 CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
-   double high = getHigh(timeframe, candleId);
-   double low = getLow(timeframe, candleId);
-   double open = getOpen(timeframe, candleId);
-   double close = getClose(timeframe, candleId); 
+   double high = getCandleValue(timeframe, candleId, CANDLE_HIGH);
+   double low = getCandleValue(timeframe, candleId, CANDLE_LOW);
+   double open = getCandleValue(timeframe, candleId, CANDLE_OPEN);
+   double close = getCandleValue(timeframe, candleId, CANDLE_CLOSE); 
    bool isBull = isBullCandle(close, open);
    double bottomOfTopWick = isBull ? close : open;
    double topOfBottomWick = isBull ? open : close;
@@ -132,12 +117,12 @@ HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime
     }
     
     HighLowTimeframe response;
-    response.low = getLow(timeframe, index);
-    response.high = getHigh(timeframe, index);
+    response.low = getCandleValue(timeframe, index, CANDLE_LOW);
+    response.high = getCandleValue(timeframe, index, CANDLE_HIGH);
     
     for(int i = startBarIndex; i > index; i--) {
-      double high = getHigh(timeframe, i);
-      double low = getLow(timeframe, i);
+      double high = getCandleValue(timeframe, i, CANDLE_HIGH);
+      double low = getCandleValue(timeframe, i, CANDLE_LOW);
       
       response.high = high > response.high ? high : response.high;
       response.low = low < response.low ? low : response.low;

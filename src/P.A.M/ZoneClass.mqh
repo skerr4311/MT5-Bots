@@ -99,7 +99,7 @@ public:
    //| Delete Zone if 50% mitigated                                     |
    //+------------------------------------------------------------------+
    void CheckAndDeleteZones(int candleId) { 
-       double previousHigh = getHigh(zoneTimeframe, candleId + 1);
+       double previousHigh = getCandleValue(zoneTimeframe, candleId + 1, CANDLE_HIGH);
        CandleInfo info = getCandleInfo(zoneTimeframe, candleId);
        ZoneInfo updatedZones[];
        bool isUdateNeeded = false;

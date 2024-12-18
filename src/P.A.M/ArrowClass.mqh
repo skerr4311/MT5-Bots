@@ -3,7 +3,7 @@
 //|                                    Copyright 2023, SDK Bots Ltd. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
-
+#include "iFunctions.mqh"
 //+------------------------------------------------------------------+
 //| ArrowClass                                                       |
 //+------------------------------------------------------------------+
@@ -68,7 +68,7 @@ public:
        arrowCount++;
        datetime time = getTime(execution ? inputExecutionTimeframe : arrowTimeframe, candleId);
        string objectName = "PAM_arrow_" + IntegerToString(arrowTimeframe) + (string)arrowCount;
-       double price = trend == TREND_UP ? getLow(arrowTimeframe, candleId) : getHigh(arrowTimeframe, candleId);
+       double price = trend == TREND_UP ? getCandleValue(arrowTimeframe, candleId, CANDLE_LOW) : getCandleValue(arrowTimeframe, candleId, CANDLE_HIGH);
        
        AddArrowInfo(time, objectName, price, trend);
        if(isArrowVisible){

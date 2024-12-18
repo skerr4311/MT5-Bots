@@ -94,8 +94,8 @@ public:
    //| Get Market trend                                                 |
    //+------------------------------------------------------------------+
    void SetInitialMarketTrend() {
-      highestHigh = getHigh(trendTimeframe, lookbackValue + 1);
-      lowestLow = getLow(trendTimeframe, lookbackValue + 1);
+      highestHigh = getCandleValue(trendTimeframe, lookbackValue + 1, CANDLE_HIGH);
+      lowestLow = getCandleValue(trendTimeframe, lookbackValue + 1, CANDLE_LOW);
    
       for(int i = lookbackValue; i >= 1; i--) {
          this.IdentifyMarketStructure(i);
@@ -137,8 +137,8 @@ public:
    //+------------------------------------------------------------------+
    void IdentifyMarketStructure(int candleId)
      {
-      double currentHigh = getHigh(trendTimeframe, candleId);
-      double currentLow = getLow(trendTimeframe, candleId);
+      double currentHigh = getCandleValue(trendTimeframe, candleId, CANDLE_HIGH);
+      double currentLow = getCandleValue(trendTimeframe, candleId, CANDLE_LOW);
       
       if (currentTrend == TREND_UP) {
          if (currentHigh > highestHigh) {
@@ -151,10 +151,10 @@ public:
                this.DrawKeyStructurePoint(KEY_STRUCTURE_HH, candleId, newHigherHighIndex, newHigherHigh);
                prevHH = newHigherHigh;
                int newHigherLowIndex = candleId;
-               double newHigherLow = getLow(trendTimeframe, newHigherLowIndex);
+               double newHigherLow = getCandleValue(trendTimeframe, newHigherLowIndex, CANDLE_LOW);
                
                for(int i = candleId; i <= newHigherHighIndex; i++) {
-                  double tempHigherLow = getLow(trendTimeframe, i);
+                  double tempHigherLow = getCandleValue(trendTimeframe, i, CANDLE_LOW);
                   if (tempHigherLow < newHigherLow) {
                      newHigherLowIndex = i;
                      newHigherLow = tempHigherLow;
@@ -185,10 +185,10 @@ public:
                DrawKeyStructurePoint(KEY_STRUCTURE_LL, candleId, newLowerLowIndex, newLowerLow);
                prevLL = newLowerLow;
                int newLowerHighIndex = candleId;
-               double newLowerHigh = getHigh(trendTimeframe, newLowerHighIndex);
+               double newLowerHigh = getCandleValue(trendTimeframe, newLowerHighIndex, CANDLE_HIGH);
                
                for(int i = candleId; i <= newLowerLowIndex; i++) {
-                  double tempLowerHigh = getHigh(trendTimeframe, i);
+                  double tempLowerHigh = getCandleValue(trendTimeframe, i, CANDLE_HIGH);
                   if (tempLowerHigh > newLowerHigh) {
                      newLowerHighIndex = i;
                      newLowerHigh = tempLowerHigh;
@@ -230,11 +230,11 @@ public:
    void handleChangeOfCharecter(int candleId) {
       if(currentTrend == TREND_DOWN) {
          // check for choch and reset needed variables
-         double currentHigh = getHigh(trendTimeframe, candleId);
+         double currentHigh = getCandleValue(trendTimeframe, candleId, CANDLE_HIGH);
          if(currentHigh > prevLH) {
             // confirmed choch
             // Switch to TREND_UP
-            double currentLow = getLow(trendTimeframe, candleId);
+            double currentLow = getCandleValue(trendTimeframe, candleId, CANDLE_LOW);
             arrowClass.InsertArrowObject(candleId, TREND_UP, candleId == 0);
             trendConformationCount = 0;
             currentTrend = TREND_UP;
@@ -247,10 +247,10 @@ public:
          }
       } else if (currentTrend == TREND_UP) {
          // check for choch and reset needed variables
-         double currentLow = getLow(trendTimeframe, candleId);
+         double currentLow = getCandleValue(trendTimeframe, candleId, CANDLE_LOW);
          if(currentLow < prevHL) {
             // confirmed choch
-            double currentHigh = getHigh(trendTimeframe, candleId);
+            double currentHigh = getCandleValue(trendTimeframe, candleId, CANDLE_HIGH);
             arrowClass.InsertArrowObject(candleId, TREND_DOWN, candleId == 0);
             trendConformationCount = 0;
             currentTrend = TREND_DOWN;
@@ -267,25 +267,25 @@ public:
    //| Check for BOS                                                    |
    //+------------------------------------------------------------------+
    void handleBreakOfStructure(int candleId) {
-      double currentLow = getLow(trendTimeframe, candleId);
-      double currentHigh = getHigh(trendTimeframe, candleId);
+      double currentLow = getCandleValue(trendTimeframe, candleId, CANDLE_LOW);
+      double currentHigh = getCandleValue(trendTimeframe, candleId, CANDLE_HIGH);
       if(currentTrend == TREND_DOWN) {
          if(currentLow < prevLL) {
             // Create a supply zone
             // scan back and find the first bull candle:
             int bullId = 0;
             for(int i = candleId + 1; bullId == 0; i++) {
-               double previousOpen = getOpen(trendTimeframe, i);
-               double previousClose = getClose(trendTimeframe, i);
+               double previousOpen = getCandleValue(trendTimeframe, i, CANDLE_OPEN);
+               double previousClose = getCandleValue(trendTimeframe, i, CANDLE_CLOSE);
                if(previousClose > previousOpen) {
                   bullId = i;
                }
             }
             
-            double low = getLow(trendTimeframe, bullId);
-            double high = getHigh(trendTimeframe, bullId);
-            if(getHigh(trendTimeframe, bullId - 1) > high) {
-               high = getHigh(trendTimeframe, bullId - 1);
+            double low = getCandleValue(trendTimeframe, bullId, CANDLE_LOW);
+            double high = getCandleValue(trendTimeframe, bullId, CANDLE_HIGH);
+            if(getCandleValue(trendTimeframe, bullId - 1, CANDLE_HIGH) > high) {
+               high = getCandleValue(trendTimeframe, bullId - 1, CANDLE_HIGH);
             }
             // complete high once i know this is working
             zoneClass.InsertZoneObject(bullId, high, low, currentTrend);
@@ -296,17 +296,17 @@ public:
             // scan back and find the first bear candle:
             int bearId = 0;
             for(int i = candleId + 1; bearId == 0; i++) {
-               double previousOpen = getOpen(trendTimeframe, i);
-               double previousClose = getClose(trendTimeframe, i);
+               double previousOpen = getCandleValue(trendTimeframe, i, CANDLE_OPEN);
+               double previousClose = getCandleValue(trendTimeframe, i, CANDLE_CLOSE);
                if(previousClose < previousOpen) {
                   bearId = i;
                }
             }
             
-            double high = getHigh(trendTimeframe, bearId);
-            double low = getLow(trendTimeframe, bearId);
-            if(getLow(trendTimeframe, bearId - 1) < low) {
-               low = getLow(trendTimeframe, bearId - 1);
+            double high = getCandleValue(trendTimeframe, bearId, CANDLE_HIGH);
+            double low = getCandleValue(trendTimeframe, bearId, CANDLE_LOW);
+            if(getCandleValue(trendTimeframe, bearId - 1, CANDLE_LOW) < low) {
+               low = getCandleValue(trendTimeframe, bearId - 1, CANDLE_LOW);
             }
             // complete high once i know this is working
             zoneClass.InsertZoneObject(bearId, high, low, currentTrend);
@@ -323,13 +323,13 @@ public:
             case KEY_STRUCTURE_HH:
                label = "HH";
                index = candleId + indexHH + 1;
-               price = getHigh(trendTimeframe, index);
+               price = getCandleValue(trendTimeframe, index, CANDLE_HIGH);
                break;
    
             case KEY_STRUCTURE_LL:
                label = "LL";
                index = candleId + indexLL + 1;
-               price = getLow(trendTimeframe, index);
+               price = getCandleValue(trendTimeframe, index, CANDLE_LOW);
                break;
    
             default:

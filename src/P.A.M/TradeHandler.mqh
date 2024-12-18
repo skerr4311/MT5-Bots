@@ -522,14 +522,14 @@ class TradeHandler
                  if(trend == TREND_UP) {
                      // Price is in an up trend, moves down to a green zone and then rejects off it.
                      if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        positionClass.HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
+                        positionClass.HandleTrade(BUY_NOW, zone.bottom, getCandleValue(inputExecutionTimeframe, 0, CANDLE_CLOSE), "Green zone rejection");
                         return true;
                      }
          
                  } else if (trend == TREND_DOWN) {
                      // Red zone
                      if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        positionClass.HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
+                        positionClass.HandleTrade(SELL_NOW, zone.top, getCandleValue(inputExecutionTimeframe, 0, CANDLE_CLOSE), "Red zone rejection");
                         return true;
                      }
          

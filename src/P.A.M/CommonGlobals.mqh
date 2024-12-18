@@ -28,6 +28,12 @@ enum KeyStructureType {
     KEY_STRUCTURE_HH,
     KEY_STRUCTURE_LL
 };
+enum ENUM_CANDLE_PROPERTY {
+    CANDLE_OPEN,
+    CANDLE_CLOSE,
+    CANDLE_HIGH,
+    CANDLE_LOW
+};
 //+------------------------------------------------------------------+
 //| EnumToString function for TrendDirection enum                    |
 //+------------------------------------------------------------------+

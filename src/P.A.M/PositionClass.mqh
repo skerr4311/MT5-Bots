@@ -54,7 +54,7 @@ public:
     void HandleOpenPositions() {
         for(int i = 0; i < getPositionsCount(); i++) {
             Position position = positions[i];
-            double close = getClose(inputExecutionTimeframe, 0);
+            double close = getCandleValue(inputExecutionTimeframe, 0, CANDLE_CLOSE);
             int digits = SymbolInfoInteger(position.symbol, SYMBOL_DIGITS);
             bool isBuy = position.type == "Buy";
             double adjustedOpenPrice = AdjustOpenPrice(position.openPrice, digits, isBuy);

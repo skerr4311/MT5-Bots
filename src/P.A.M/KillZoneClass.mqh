@@ -180,7 +180,7 @@ class KillZone {
       
       if(isInKillZone && !isDrawingStarted) {
          isDrawingStarted = true;
-         InsertNewKillZone(candleDateTime, killZoneName, getHigh(this.TimeFrame, candleId), getLow(this.TimeFrame, candleId), killZoneType);
+         InsertNewKillZone(candleDateTime, killZoneName, getCandleValue(this.TimeFrame, candleId, CANDLE_HIGH), getCandleValue(this.TimeFrame, candleId, CANDLE_LOW), killZoneType);
       } else if(isInKillZone && isDrawingStarted) {
          HighLowTimeframe response = GetLowestPriceFromStartTime(TimeFrame, getLastKzStartTime(), candleId);
          UpdateLatestKillZone(candleDateTime, killZoneName, response.high, response.low, killZoneType);
