@@ -78,7 +78,7 @@ class TradeHandler
          }
 
          //+------------------------------------------------------------------+
-         //| onTick fuction()                                                 |
+         //| Trade handler onTick fuction()                                                 |
          //+------------------------------------------------------------------+
          void OnTick() {
             trendClass.HandleTrend();
@@ -196,30 +196,6 @@ class TradeHandler
              "\nBB: ", IntegerToString(ArraySize(breakerBlocks)));
          }
 
-         /*
-         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-          - CheckTrendDirectionChange
-          - CheckPriceContinuationOffZone
-          - CheckRejectionOffEma (Trend Time)
-
-         GBPJPY: -$540.63
-         * No protection - tapped out GROSS 50K!
-         EURUSD: -$73.19
-         * Tapped out very quickly
-         USDCAD: $1,651.40
-         * Tapped out very quickly
-         GBPUSD: Tapped out
-         * tapped ut fairly quickly
-         AUDUSD: $711.88
-         * tapped out semi quickly
-         USDJPY: -$952.10
-         * tapped out two months
-         USDCHF: tapped out
-         * tapped out quick
-
-         * no protection is no good
-         */
-         
          //+------------------------------------------------------------------+
          //| Check for entry                                                  |
          //+------------------------------------------------------------------+
@@ -227,90 +203,53 @@ class TradeHandler
             if(isInKillZone) {
                datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
                if(currentExecTime != oncePerBarExec) {  // Ensure this runs only once per bar
+                  oncePerBarExec = currentExecTime;
                   if (CalculateSpread() < 3.0) {
-                     // Combined check for all conditions
-                     bool shouldExecuteTrade = 
-                           //CheckPriceRejection(1, trendClass.getTrend()) ||  // Uncomment and use if needed
-                           CheckTrendDirectionChange() ||
-                           //CheckRejectionOffEma() // ||
-                           CheckPriceContinuationOffZone();
-
-                     if (shouldExecuteTrade) {
-                           oncePerBarExec = currentExecTime;  // Update the execution timestamp after any condition is true
-                           Print("Trade executed or operation performed for the current bar: ", currentExecTime);
-                           return;
-                     }
+                     // attempt some execution specific check for entry
                   }
                }
                
                datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
-               if(currentTrendTime != oncePerBarTrend && CalculateSpread() < 3.0) {
-                  // if (CheckRejectionOffEma()) {
-                  //    oncePerBarTrend = currentTrendTime;
-                  //    return;
-                  // }
-               }
-            }
-         }         
-         
-         //+------------------------------------------------------------------+
-         //| Check rejection off EMA                                          |
-         //+------------------------------------------------------------------+
-         bool CheckRejectionOffEma() {
-            double fiftyEMA = GetEMAForBar(0, inputTrendTimeframe, 50);
-            TrendDirection trend = trendClass.getTrend();
-            CandleInfo prevPrevCandle = getCandleInfo(inputExecutionTimeframe, 2);
-            CandleInfo prevCandle = getCandleInfo(inputExecutionTimeframe, 1);
-            CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
-
-            if(trend == TREND_DOWN) {
-               if((prevPrevCandle.high < fiftyEMA) || (prevPrevCandle.high > fiftyEMA && prevPrevCandle.topOfBottomWick < fiftyEMA)) {
-                  if (prevCandle.high >= fiftyEMA) {
-                     if (prevCandle.bottomOfTopWick < fiftyEMA) {
-                        positionClass.HandleTrade(SELL_NOW, prevCandle.high, currentCandle.close, "50ema rejection down");
-                     }
+               if(currentTrendTime != oncePerBarTrend) {
+                  oncePerBarTrend = currentTrendTime;
+                  if (CalculateSpread() < 3.0) {
+                     CheckPriceContinuation();
                   }
                }
             }
-            
-            return false;
-         }
-         
-         //+------------------------------------------------------------------+
-         //| Check trend direction                                            |
-         //+------------------------------------------------------------------+
-         /*
-         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-         */
-         bool CheckTrendDirectionChange() {
-            TrendDirection trend = trendClass.getTrend();
-            executionArrow = executionClass.getTrend();
-            CandleInfo currentCandle = getCandleInfo(inputExecutionTimeframe, 0);
-            
-            if (trendArrow != trend) {
-               if(EnumToString(trend) == "Down" && EnumToString(executionArrow) == "Down") {
-                  // closePositions(1);
-                  // DrawHorizontalLineWithLabel(currentCandle.close, clrAqua, 0, "LABEL", IntegerToString(0));
-                  // return positionClass.HandleTrade(SELL_NOW, getHigh(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow down");
-               } else if (EnumToString(trend) == "Up" && EnumToString(executionArrow) == "Up") {
-                  // closePositions(2);
-                  // DrawHorizontalLineWithLabel(currentCandle.close, clrAqua, 0, "LABEL", IntegerToString(1));
-                  // return positionClass.HandleTrade(BUY_NOW, getLow(inputTrendTimeframe, 0), getClose(inputTrendTimeframe, 0), "Arrow up");
-               }
-               
-               trendArrow = trend;
-            }
-            
-            return false;
          }
 
          //+------------------------------------------------------------------+
          //| Check if price continuation off a zone                           |
          //+------------------------------------------------------------------+
-         /*
-         TESTING: trend: 1hr exec: 5min period: 01-01-23 - 23-03-24
-         */
+         bool CheckPriceContinuation() {
+            TrendDirection trend = trendClass.getTrend();
+            CandleInfo prevCandle = getCandleInfo(inputTrendTimeframe, 1);
 
+            DrawHorizontalLineWithLabel(prevCandle.high, clrPink, 0, "candle top", "Candle_top");
+            DrawHorizontalLineWithLabel(prevCandle.bottomOfTopWick, clrPink, 0, "candle bottom of top wick", "Candle_bottom_top_wick");
+
+            datetime currentTrendTime = getTime(inputTrendTimeframe, 0);
+
+            DrawLabel("name", "label", prevCandle.high, currentTrendTime);
+
+
+            for (int i = 0; i < executionClass.getZoneCount(); i++) {
+               ZoneInfo zone = executionClass.getZones(i);
+               DrawHorizontalLineWithLabel(zone.bottom, clrAntiqueWhite, 0, "candle bottom", zone.startTime);
+               if (trend == TREND_DOWN && zone.trend == TREND_DOWN){
+                  if (prevCandle.high > zone.bottom && prevCandle.bottomOfTopWick < zone.bottom) {
+                     // DrawHorizontalLineWithLabel(zone.bottom, clrPink, 0, "candle bottom", "Candle_bottom");
+                     return positionClass.HandleTrade(SELL_STOP, zone.top, zone.bottom, "Down trend Exec Zone continuation");
+                  }
+               }
+            }
+            return true;
+         }         
+
+         //+------------------------------------------------------------------+
+         //| Check if price continuation off a zone                           |
+         //+------------------------------------------------------------------+
          bool CheckPriceContinuationOffZone() {
             TrendDirection trend = trendClass.getTrend();
             TrendDirection execTrend = executionClass.getTrend();
@@ -322,8 +261,10 @@ class TradeHandler
             positionClass.CancelAllPendingOrders();
             // Execution Zones
             for (int i = 0; i < executionClass.getZoneCount(); i++) {
+               Print("zone: " + i + " out of " + executionClass.getZoneCount() + " zones.");
                ZoneInfo zone = executionClass.getZones(i);
                if (trend == TREND_DOWN){
+                  DrawHorizontalLineWithLabel(prevCandle.low, clrOrange, 1, "candle bottom", "Candle_bottom");
                   if (zone.trend == TREND_DOWN){
                      // Looking for continuation
                      /*
@@ -334,7 +275,7 @@ class TradeHandler
                      
                      if (prevPrevCandle.close < zone.bottom) {
                         if (prevCandle.high > zone.bottom && prevCandle.close < zone.bottom) {
-                           DrawHorizontalLineWithLabel(zone.top, clrOrange, 0, "LABEL", IntegerToString(zone.bottom));
+                           DrawHorizontalLineWithLabel(zone.top, clrOrange, 0, "Zone trend down", zone.startTime);
                            return positionClass.HandleTrade(SELL_STOP, zone.top, prevCandle.low, "Down trend Exec Zone continuation");
                         }
                      }
@@ -438,108 +379,6 @@ class TradeHandler
             }
             
             return isTrade;
-         }
-
-         //+------------------------------------------------------------------+
-         //| Get Stoploss from zone                                           |
-         //+------------------------------------------------------------------+
-         double getStopLossFromZone(TrendDirection trend, bool isTrend, double entryPrice) {
-            double stoploss = entryPrice;
-
-            if (isTrend) {
-               for (int i = 0; i < trendClass.getZoneCount(); i++) {
-                  ZoneInfo zone = trendClass.getZones(i);
-                  if (trend == TREND_UP) {
-                     if (zone.trend == TREND_DOWN && zone.bottom > entryPrice && zone.bottom > stoploss) {
-                        stoploss = zone.bottom;
-                     }
-                  } else {
-                     if (zone.trend == TREND_UP && zone.top < entryPrice && zone.top < stoploss) {
-                        stoploss = zone.top;
-                     }
-                  }
-               }
-            } else {
-               for (int i = 0; i < executionClass.getZoneCount(); i++) {
-                  ZoneInfo zone = executionClass.getZones(i);
-                  if (trend == TREND_UP) {
-                     if (zone.trend == TREND_DOWN && zone.bottom > entryPrice && zone.bottom > stoploss) {
-                        stoploss = zone.bottom;
-                     }
-                  } else {
-                     if (zone.trend == TREND_UP && zone.top < entryPrice && zone.top < stoploss) {
-                        stoploss = zone.top;
-                     }
-                  }
-               }
-            }
-
-            return stoploss == entryPrice ? 0.00 : stoploss;
-
-         }
-         
-         //+------------------------------------------------------------------+
-         //| Check if price has rejected off a zone                           |
-         //+------------------------------------------------------------------+
-         bool CheckPriceRejection(int candleId, TrendDirection trend) {
-             CandleInfo current = getCandleInfo(inputExecutionTimeframe, candleId);  
-             CandleInfo previous = getCandleInfo(inputExecutionTimeframe, candleId + 1);
-         
-             /*
-               
-             for (int i = 0; i < trendClass.getZoneCount(); i++) {
-                 ZoneInfo zone = trendClass.getZones(i);
-                 
-                 // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
-                 // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
-                 
-                 if(trend == TREND_UP) {
-                     // Price is in an up trend, moves down to a green zone and then rejects off it.
-                     if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        HandleTrade(BUY_NOW, zone.bottom, getClose(inputExecutionTimeframe, 0), "Green zone rejection");
-                        return true;
-                     }
-         
-                 } else if (trend == TREND_DOWN) {
-                     // Red zone
-                     if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        HandleTrade(SELL_NOW, zone.top, getClose(inputExecutionTimeframe, 0), "Red zone rejection");
-                        return true;
-                     }
-         
-                 } else {
-                  // nothing
-         
-                 }
-             }
-             */
-             for (int i = 0; i < executionClass.getZoneCount(); i++) {
-                 ZoneInfo zone = executionClass.getZones(i);
-                 
-                 // Continuation: Zone is used as a retrace point for price to return to a zone to the continue on its path.       
-                 // Rejection: Zone is used as a rejection point. The movement is not strong enough to break through a point.
-                 
-                 if(trend == TREND_UP) {
-                     // Price is in an up trend, moves down to a green zone and then rejects off it.
-                     if (zone.trend == trend && previous.low < zone.top && previous.low > zone.bottom && current.close > zone.top) {
-                        positionClass.HandleTrade(BUY_NOW, zone.bottom, getCandleValue(inputExecutionTimeframe, 0, CANDLE_CLOSE), "Green zone rejection");
-                        return true;
-                     }
-         
-                 } else if (trend == TREND_DOWN) {
-                     // Red zone
-                     if (zone.trend == trend && previous.high > zone.bottom && previous.high < zone.top && current.close < zone.bottom) {
-                        positionClass.HandleTrade(SELL_NOW, zone.top, getCandleValue(inputExecutionTimeframe, 0, CANDLE_CLOSE), "Red zone rejection");
-                        return true;
-                     }
-         
-                 } else {
-                  // nothing
-         
-                 }
-             }
-             
-             return false;
          }
   };
 //+------------------------------------------------------------------+

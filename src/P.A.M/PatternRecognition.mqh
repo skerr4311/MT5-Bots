@@ -17,68 +17,106 @@ class PatternRecognition {
 public:
     // Function to detect M Tops
     static bool IsMTop(double &prices[], int &peak1Index, int &troughIndex, int &peak2Index, double tolerance = 0.02) {
-        peak1Index = FindPeak(prices, 0, ArraySize(prices) / 2);
-        troughIndex = FindTrough(prices, peak1Index, ArraySize(prices) / 2);
+        // Step 1: Price moves down for a minimum of two bars
+        if (ArraySize(prices) < 3) return false;
+        if (prices[1] >= prices[0] || prices[2] >= prices[1]) return false;
+
+        // Step 2: Price creates a lower low
+        troughIndex = FindTrough(prices, 0, ArraySize(prices) / 2);
+        if (troughIndex == -1) return false;
+
+        // Step 3: Price moves up, then back down and fails to break the lower low
+        peak1Index = FindPeak(prices, 0, troughIndex);
+        if (peak1Index == -1) return false;
+
         peak2Index = FindPeak(prices, troughIndex, ArraySize(prices));
+        if (peak2Index == -1) return false;
 
-        if (peak1Index == -1 || troughIndex == -1 || peak2Index == -1)
-            return false;
-
-        double peak1 = prices[peak1Index];
         double trough = prices[troughIndex];
-        double peak2 = prices[peak2Index];
+        if (prices[peak2Index] <= prices[troughIndex]) return false;
 
-        bool peaksSimilar = MathAbs(peak1 - peak2) / peak1 <= tolerance;
-        bool breakout = prices[troughIndex + 1] < trough;
+        // Check for failure to break lower low
+        for (int i = troughIndex + 1; i < peak2Index; i++) {
+            if (prices[i] < trough) return false;
+        }
 
-        return peaksSimilar && breakout;
+        // Step 4: Draw a line on the neck and wait for price to come back to it
+        DrawHorizontalLineWithLabel(prices[troughIndex], clrBlueViolet, troughIndex, "MTop Neckline", "MTop_Neckline" + prices[troughIndex]);
+
+        return true;
     }
 
     // Function to detect W Bottoms
     static bool IsWBottom(double &prices[], int &trough1Index, int &peakIndex, int &trough2Index, double tolerance = 0.02) {
-        trough1Index = FindTrough(prices, 0, ArraySize(prices) / 2);
-        peakIndex = FindPeak(prices, trough1Index, ArraySize(prices) / 2);
+        // Step 1: Price moves up for a minimum of two bars
+        if (ArraySize(prices) < 3) return false;
+        if (prices[1] <= prices[0] || prices[2] <= prices[1]) return false;
+
+        // Step 2: Price creates a higher high
+        peakIndex = FindPeak(prices, 0, ArraySize(prices) / 2);
+        if (peakIndex == -1) return false;
+
+        // Step 3: Price moves down, then back up and fails to break the higher high
+        trough1Index = FindTrough(prices, 0, peakIndex);
+        if (trough1Index == -1) return false;
+
         trough2Index = FindTrough(prices, peakIndex, ArraySize(prices));
+        if (trough2Index == -1) return false;
 
-        if (trough1Index == -1 || peakIndex == -1 || trough2Index == -1)
-            return false;
-
-        double trough1 = prices[trough1Index];
         double peak = prices[peakIndex];
-        double trough2 = prices[trough2Index];
+        if (prices[trough2Index] >= prices[peakIndex]) return false;
 
-        bool troughsSimilar = MathAbs(trough1 - trough2) / trough1 <= tolerance;
-        bool breakout = prices[peakIndex + 1] > peak;
+        // Check for failure to break higher high
+        for (int i = peakIndex + 1; i < trough2Index; i++) {
+            if (prices[i] > peak) return false;
+        }
 
-        return troughsSimilar && breakout;
+        // Step 4: Draw a line on the neck and wait for price to come back to it
+        DrawHorizontalLineWithLabel(prices[peakIndex], clrGreenYellow, peakIndex, "WBottom Neckline", "WBottom_Neckline" + prices[peakIndex]);
+
+        return true;
     }
 
 private:
     // Function to find the highest peak in a range
     static int FindPeak(double &prices[], int start, int end) {
-        int peakIndex = -1;
-        double peakValue = -DBL_MAX;
+        if (start < 0 || end > ArraySize(prices) || start >= end) {
+            Print("Invalid range: Start=", start, " End=", end);
+            return -1;
+        }
 
-        for (int i = start; i < end; i++) {
+        int peakIndex = start;
+        double peakValue = prices[start];
+
+        for (int i = start + 1; i < end; i++) {
             if (prices[i] > peakValue) {
                 peakValue = prices[i];
                 peakIndex = i;
             }
         }
+
+        Print("Peak detected at Index: ", peakIndex, " Value: ", peakValue);
         return peakIndex;
     }
 
     // Function to find the lowest trough in a range
     static int FindTrough(double &prices[], int start, int end) {
-        int troughIndex = -1;
-        double troughValue = DBL_MAX;
+        if (start < 0 || end > ArraySize(prices) || start >= end) {
+            Print("Invalid range: Start=", start, " End=", end);
+            return -1;
+        }
 
-        for (int i = start; i < end; i++) {
+        int troughIndex = start;
+        double troughValue = prices[start];
+
+        for (int i = start + 1; i < end; i++) {
             if (prices[i] < troughValue) {
                 troughValue = prices[i];
                 troughIndex = i;
             }
         }
+
+        Print("Trough detected at Index: ", troughIndex, " Value: ", troughValue);
         return troughIndex;
     }
 };

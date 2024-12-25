@@ -280,3 +280,18 @@ void DeleteEAObjects(string prefix) {
         }
     }
 }
+
+//+------------------------------------------------------------------+
+//| Draw Neckline                                                    |
+//+------------------------------------------------------------------+
+void DrawFullLine(int index, double price, string name, color lineColor) {
+    string objectName = name + "_" + TimeToString(TimeCurrent(), TIME_MINUTES);
+
+    datetime timeStart = iTime(Symbol(), PERIOD_H1, index);
+    datetime timeEnd = iTime(Symbol(), PERIOD_H1, index + 2); // Short horizontal line spanning 2 candles
+
+    ObjectCreate(0, objectName, OBJ_TREND, 0, timeStart, price, timeEnd, price);
+    ObjectSetInteger(0, objectName, OBJPROP_COLOR, lineColor);
+    ObjectSetInteger(0, objectName, OBJPROP_WIDTH, 2);
+    ObjectSetInteger(0, objectName, OBJPROP_STYLE, STYLE_DASH);
+}
