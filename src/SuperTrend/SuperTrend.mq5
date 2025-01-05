@@ -5,36 +5,23 @@
 //+------------------------------------------------------------------+
 #property strict
 
+#include "../shared/class/SuperTrendClass.mqh" // Include the SuperTrendClass header
+
 // Inputs for SuperTrend settings
 input double Factor = 3.0;          // Factor for ATR multiplier
 input int ATRLength = 10;           // ATR Length
 input double LotSize = 0.1;         // Lot size for trades
 
 // Define variables
-double SuperTrend[], Direction[];
-double highestHigh, lowestLow, atrValue, superTrendValue;
-int BarsCalculated;
-int atrHandle;
+SuperTrendClass superTrend; // Instance of SuperTrendClass
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-   // Resize arrays to store values for at least two bars
-   ArrayResize(SuperTrend, 2);  // Ensure at least two values
-   ArrayResize(Direction, 2);   // Same for Direction array
-
-   ArraySetAsSeries(SuperTrend, true);
-   ArraySetAsSeries(Direction, true);
-
-   // Create ATR handle
-   atrHandle = iATR(_Symbol, _Period, ATRLength);
-   if (atrHandle == INVALID_HANDLE)
-     {
-      Print("Error creating ATR handle: ", GetLastError());
-      return INIT_FAILED;
-     }
+   // Initialize the SuperTrendClass with input parameters
+   superTrend.Init(Factor, ATRLength, _Period);
 
    Print("Initialization complete.");
    return INIT_SUCCEEDED;
@@ -43,115 +30,25 @@ int OnInit()
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
-void OnTick()
-  {
-   // Check if there are enough bars to calculate SuperTrend
-   int totalBars = Bars(_Symbol, _Period);
-   Print("Bars available: ", totalBars);
+void OnTick() {
+    superTrend.Calculate();       // Calculate SuperTrend
+    superTrend.DrawLine(0);       // Draw the SuperTrend line for the current bar
 
-   // Ensure there are enough bars to calculate the ATR and SuperTrend
-   if (totalBars <= ATRLength + 1)
-     {
-      Print("Not enough bars to calculate ATR and SuperTrend. ATRLength: ", ATRLength);
-      return;  // Exit OnTick if there are not enough bars
-     }
+    double superTrendValue = superTrend.GetSuperTrendForBar(0);
+    int direction = superTrend.GetDirection();
 
-   // Get the current closing price
-   double closePrice = iClose(_Symbol, _Period, 0); // Get the close price of the current candle
-   Print("Current Close Price: ", closePrice);
-
-   // Calculate SuperTrend
-   CalculateSuperTrend();
-
-   // Ensure SuperTrend[0] is available before accessing it to avoid out-of-range error
-   int superTrendArraySize = ArraySize(SuperTrend);
-   Print("SuperTrend Array Size: ", superTrendArraySize);
-
-   // Make sure array has the correct data size before accessing
-   if (superTrendArraySize > 0 && !isnan(SuperTrend[0]) && !isnan(Direction[0]))
-     {
-      Print("SuperTrend[0]: ", SuperTrend[0]);
-      Print("Direction[0]: ", Direction[0]);
-
-      // Generate buy/sell signals
-      if (closePrice > SuperTrend[0] && Direction[0] == 1)
-        {
-         Print("Buy Signal Detected");
-         // Open a buy order if no position is open
-         if (PositionsTotal() == 0)
-           {
+    // Trading logic
+    double closePrice = iClose(Symbol(), _Period, 0);
+    if (closePrice > superTrendValue && direction == 1) {
+        Print("Buy Signal Detected");
+        if (PositionsTotal() == 0) {
             OpenBuyOrder();
-           }
         }
-      else if (closePrice < SuperTrend[0] && Direction[0] == -1)
-        {
-         Print("Sell Signal Detected");
-         // Close buy order if the signal flips
-         CloseBuyOrder();
-        }
-     }
-   else
-     {
-      Print("SuperTrend array is empty or contains invalid values.");
-     }
-  }
-
-//+------------------------------------------------------------------+
-//| Custom function to calculate SuperTrend                          |
-//+------------------------------------------------------------------+
-void CalculateSuperTrend()
-  {
-   // Ensure that the ATR handle is valid and data can be copied
-   if (atrHandle == INVALID_HANDLE)
-     {
-      Print("ATR handle invalid. Exiting calculation.");
-      return;
-     }
-
-   highestHigh = iHigh(_Symbol, _Period, 0);       // Get the highest high of the current candle
-   lowestLow  = iLow(_Symbol, _Period, 0);         // Get the lowest low of the current candle
-   Print("Highest High: ", highestHigh, " Lowest Low: ", lowestLow);
-
-   // Retrieve ATR value using CopyBuffer
-   double atrValues[];
-   int copied = CopyBuffer(atrHandle, 0, 0, 1, atrValues);
-   Print("ATR values copied: ", copied);
-
-   if (copied <= 0)
-     {
-      Print("Error copying ATR values: ", GetLastError());
-      return;
-     }
-
-   atrValue = atrValues[0]; // Get the current ATR value
-   Print("ATR Value: ", atrValue);
-
-   double closePrice = iClose(_Symbol, _Period, 0); // Get the current close price
-   Print("Current Close Price for SuperTrend Calculation: ", closePrice);
-
-   // Calculate SuperTrend and direction, ensuring you populate the arrays correctly
-   if (ArraySize(SuperTrend) > 0)
-     {
-      if (closePrice > SuperTrend[0])
-        {
-         superTrendValue = lowestLow + Factor * atrValue;
-         SuperTrend[0]   = superTrendValue;
-         Direction[0]    = 1;   // Buy direction
-         Print("Calculated SuperTrend: ", superTrendValue, " - Buy Direction");
-        }
-      else if (closePrice < SuperTrend[0])
-        {
-         superTrendValue = highestHigh - Factor * atrValue;
-         SuperTrend[0]   = superTrendValue;
-         Direction[0]    = -1;  // Sell direction
-         Print("Calculated SuperTrend: ", superTrendValue, " - Sell Direction");
-        }
-     }
-   else
-     {
-      Print("SuperTrend calculation error: Array is not properly initialized.");
-     }
-  }
+    } else if (closePrice < superTrendValue && direction == -1) {
+        Print("Sell Signal Detected");
+        CloseBuyOrder();
+    }
+}
 
 //+------------------------------------------------------------------+
 //| Custom function to open a buy order                              |
@@ -171,7 +68,7 @@ void OpenBuyOrder()
    request.tp       = 0;                           // Take profit level (not set)
    request.deviation= 10;                          // Max price deviation in points
    request.magic    = 123456;                      // Unique identifier for the trade
-   request.comment  = "SuperTrend Buy " + DoubleToString(superTrendValue, 2);  // Fix implicit conversion issue
+   request.comment  = "SuperTrend Buy " + DoubleToString(superTrend.GetSuperTrend(), 2);
 
    Print("Opening Buy Order with price: ", request.price);
 
@@ -212,4 +109,12 @@ void CloseBuyOrder()
            }
         }
      }
+  }
+
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+   superTrend.Deinit(); // Clean up resources
   }

@@ -66,26 +66,6 @@ CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
 }
 
 //+------------------------------------------------------------------+
-//| check if Wicked below ema                                        |
-//+------------------------------------------------------------------+
-bool isCandleWickedBelowTrendEma(int candleId) {
-   CandleInfo candle = getCandleInfo(inputTrendTimeframe, candleId);
-   double fiftyEMA = GetEMAForBar(candleId, inputTrendTimeframe, 50);
-
-   return candle.high > fiftyEMA && candle.close < fiftyEMA;
-}
-
-//+------------------------------------------------------------------+
-//| check if Wicked above ema                                        |
-//+------------------------------------------------------------------+
-bool isCandleWickedAboveTrendEma(int candleId) {
-   CandleInfo candle = getCandleInfo(inputTrendTimeframe, candleId);
-   double fiftyEMA = GetEMAForBar(candleId, inputTrendTimeframe, 50);
-
-   return candle.low < fiftyEMA && candle.close > fiftyEMA;
-}
-
-//+------------------------------------------------------------------+
 //| isLondonInitiated                                                |
 //+------------------------------------------------------------------+
 bool isLondonInitiated() {
