@@ -9,7 +9,7 @@
 //+------------------------------------------------------------------+
 #include "../shared/function/iFunctions.mqh"
 #include "ZoneClass.mqh"
-#include "ArrowClass.mqh"
+#include "../shared/class/ArrowClass.mqh"
 #include "CommonGlobals.mqh"
 #include "HighsAndLowsClass.mqh"
 #include "../shared/function/iDraw.mqh"
