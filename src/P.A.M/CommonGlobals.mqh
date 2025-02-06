@@ -6,6 +6,7 @@
 
 //TYPES
 #include "../shared/types/trendEnums.mqh"
+#include "../shared/types/candleStructs.mqh"
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -14,33 +15,7 @@ enum KeyStructureType {
     KEY_STRUCTURE_HH,
     KEY_STRUCTURE_LL
 };
-enum ENUM_CANDLE_PROPERTY {
-    CANDLE_OPEN,
-    CANDLE_CLOSE,
-    CANDLE_HIGH,
-    CANDLE_LOW
-};
 
-//+------------------------------------------------------------------+
-//| Candle object                                                    |
-//+------------------------------------------------------------------+
-struct CandleInfo {
-   double high;
-   double low;
-   double open;
-   double close;
-   bool isBull;
-   double bottomOfTopWick;
-   double topOfBottomWick;
-};
-
-//+------------------------------------------------------------------+
-//| High and low of given timeframe                                  |
-//+------------------------------------------------------------------+
-struct HighLowTimeframe {
-   double high;
-   double low;
-};
 //+------------------------------------------------------------------+
 //| Position Types                                                   |
 //+------------------------------------------------------------------+
