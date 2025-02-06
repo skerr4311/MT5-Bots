@@ -7,6 +7,7 @@
 //TYPES
 #include "../shared/types/trendEnums.mqh"
 #include "../shared/types/candleStructs.mqh"
+#include "../shared/types/positionEnums.mqh"
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -16,17 +17,6 @@ enum KeyStructureType {
     KEY_STRUCTURE_LL
 };
 
-//+------------------------------------------------------------------+
-//| Position Types                                                   |
-//+------------------------------------------------------------------+
-enum PositionTypes {
-   SELL_NOW,
-   SELL_STOP,
-   SELL_LIMIT,
-   BUY_NOW,
-   BUY_STOP,
-   BUY_LIMIT,
-};
 //+------------------------------------------------------------------+
 //| Pip Action Types                                                 |
 //+------------------------------------------------------------------+
@@ -69,27 +59,7 @@ string KillZoneTypeToString(KillZoneTypes killZoneType) {
         default: return "Kill Zone";
     }
 }
-//+------------------------------------------------------------------+
-//| TrendToString function for PositionType enum                      |
-//+------------------------------------------------------------------+
-string PositionToString(PositionTypes position) {
-    switch(position) {
-        case SELL_NOW:
-            return "Sell Now";
-        case SELL_STOP:
-            return "Sell Stop";
-        case SELL_LIMIT:
-            return "Sell Limit";
-        case BUY_NOW:
-            return "Buy Now";
-        case BUY_STOP:
-            return "Buy Stop";
-        case BUY_LIMIT:
-            return "Buy Limit";
-        default:
-            return "None";
-    }
-}
+
 //+------------------------------------------------------------------+
 //| Trade Object                                                     |
 //+------------------------------------------------------------------+
