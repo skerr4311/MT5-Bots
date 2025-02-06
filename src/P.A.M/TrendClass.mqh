@@ -12,7 +12,7 @@
 #include "ArrowClass.mqh"
 #include "CommonGlobals.mqh"
 #include "HighsAndLowsClass.mqh"
-#include "../shared/class/iDraw.mqh"
+#include "../shared/function/iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| Trend Class                                                      |
