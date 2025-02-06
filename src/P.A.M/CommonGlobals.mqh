@@ -5,9 +5,8 @@
 //+------------------------------------------------------------------+
 
 //TYPES
-#include "../shared/types/trendEnums.mqh"
 #include "../shared/types/candleStructs.mqh"
-#include "../shared/types/positionEnums.mqh"
+#include "../shared/types/tradeStructs.mqh"
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -59,28 +58,6 @@ string KillZoneTypeToString(KillZoneTypes killZoneType) {
         default: return "Kill Zone";
     }
 }
-
-//+------------------------------------------------------------------+
-//| Trade Object                                                     |
-//+------------------------------------------------------------------+
-struct TradeActionInfo {
-   string comment;
-   double top;
-   double bottom;
-   PositionTypes postionType;
-};
-//+------------------------------------------------------------------+
-//| Zone Type                                                        |
-//+------------------------------------------------------------------+
-struct ZoneInfo {
-   ENUM_TIMEFRAMES zoneTimeframe;
-   string name;
-   double top;
-   double bottom;
-   double midPrice;
-   TrendDirection trend;
-   datetime startTime;
-};
 
 //+------------------------------------------------------------------+
 //| KillZone Type                                                    |
