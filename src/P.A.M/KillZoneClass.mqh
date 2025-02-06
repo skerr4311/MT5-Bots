@@ -7,7 +7,7 @@
 //+------------------------------------------------------------------+
 //| Include                                                           |
 //+------------------------------------------------------------------+
-#include "iFunctions.mqh"
+#include "../shared/function/iFunctions.mqh"
 #include "CommonGlobals.mqh"
 #include "../shared/function/iDraw.mqh"
 
