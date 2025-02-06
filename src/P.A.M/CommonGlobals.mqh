@@ -7,7 +7,7 @@
 //TYPES
 #include "../shared/types/candleStructs.mqh"
 #include "../shared/types/tradeStructs.mqh"
-#include "../shared/types/killZoneEnums.mqh"
+#include "../shared/types/killZoneStructs.mqh"
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -23,16 +23,4 @@ enum KeyStructureType {
 enum PipActionTypes {
    ADD,
    SUBTRACT
-};
-
-//+------------------------------------------------------------------+
-//| KillZone Type                                                    |
-//+------------------------------------------------------------------+
-struct KillZoneInfo {
-    datetime startTime;
-    datetime endTime;
-    string killZoneName;
-    double priceTop;
-    double priceBottom;
-    KillZoneTypes killZoneType;
 };
