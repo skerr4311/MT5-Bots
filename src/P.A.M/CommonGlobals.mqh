@@ -4,15 +4,12 @@
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 
+//TYPES
+#include "../shared/types/trendEnums.mqh"
+
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
 //+------------------------------------------------------------------+
-enum TrendDirection
-  {
-   TREND_NONE = 0,
-   TREND_UP,
-   TREND_DOWN
-  };
 enum KeyStructureType {
     KEY_STRUCTURE_HH,
     KEY_STRUCTURE_LL
@@ -23,19 +20,7 @@ enum ENUM_CANDLE_PROPERTY {
     CANDLE_HIGH,
     CANDLE_LOW
 };
-//+------------------------------------------------------------------+
-//| EnumToString function for TrendDirection enum                    |
-//+------------------------------------------------------------------+
-string EnumToString(TrendDirection trend) {
-    switch(trend) {
-        case TREND_UP:
-            return "Up";
-        case TREND_DOWN:
-            return "Down";
-        default:
-            return "None";
-    }
-}
+
 //+------------------------------------------------------------------+
 //| Candle object                                                    |
 //+------------------------------------------------------------------+
@@ -110,7 +95,7 @@ string KillZoneTypeToString(KillZoneTypes killZoneType) {
     }
 }
 //+------------------------------------------------------------------+
-//| EnumToString function for PositionType enum                      |
+//| TrendToString function for PositionType enum                      |
 //+------------------------------------------------------------------+
 string PositionToString(PositionTypes position) {
     switch(position) {

@@ -185,8 +185,8 @@ class TradeHandler
          //+------------------------------------------------------------------+
          void UpdateInfoBox() {
              Comment(EA_Name, 
-             "\nTrend Direction: ", EnumToString(trendClass.getTrend()), 
-             "\nExecute Direction: ", EnumToString(executionClass.getTrend()),
+             "\nTrend Direction: ", TrendToString(trendClass.getTrend()), 
+             "\nExecute Direction: ", TrendToString(executionClass.getTrend()),
              "\nTrend Zone count: ", IntegerToString(trendClass.getZoneCount()),
              "\nExecute Zone count: ", IntegerToString(executionClass.getZoneCount()),
              "\nAccount Profit: ", GetAccountEquity() - GetAccountBalance(),
