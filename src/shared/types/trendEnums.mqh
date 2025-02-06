@@ -6,6 +6,11 @@
 #ifndef TREND_ENUMS_MQH
 #define TREND_ENUMS_MQH
 
+enum KeyStructureType {
+    KEY_STRUCTURE_HH,
+    KEY_STRUCTURE_LL
+};
+
 enum TrendDirection {
    TREND_NONE = 0,
    TREND_UP,
