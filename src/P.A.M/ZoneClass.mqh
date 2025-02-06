@@ -8,7 +8,7 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "CommonGlobals.mqh"
-#include "iDraw.mqh"
+#include "../shared/class/iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| Zone Class                                                       |

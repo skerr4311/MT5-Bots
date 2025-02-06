@@ -8,7 +8,7 @@
 //| Include                                                          |
 //+------------------------------------------------------------------+
 #include "tFunctions.mqh"
-#include "iDraw.mqh"
+#include "../shared/class/iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| PositionClass                                                    |

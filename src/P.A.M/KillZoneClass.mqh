@@ -9,7 +9,7 @@
 //+------------------------------------------------------------------+
 #include "iFunctions.mqh"
 #include "CommonGlobals.mqh"
-#include "iDraw.mqh"
+#include "../shared/class/iDraw.mqh"
 
 class KillZone {
   private:
