@@ -7,6 +7,7 @@
 //TYPES
 #include "../shared/types/candleStructs.mqh"
 #include "../shared/types/tradeStructs.mqh"
+#include "../shared/types/killZoneEnums.mqh"
 
 //+------------------------------------------------------------------+
 //| Common Globals                                                   |
@@ -23,41 +24,6 @@ enum PipActionTypes {
    ADD,
    SUBTRACT
 };
-//+------------------------------------------------------------------+
-//| Pip Action Types                                                 |
-//+------------------------------------------------------------------+
-enum KillZoneTypes {
-   LONDON,
-   NEW_YORK,
-   ASIAN
-};
-
-//+------------------------------------------------------------------+
-//| ENUM KILLZONE TO COLOR                                           |
-//+------------------------------------------------------------------+
-color KillZoneToColor(KillZoneTypes kz) {
-    switch(kz) {
-        case LONDON:
-            return clrDeepPink;
-        case NEW_YORK:
-            return clrBlueViolet;
-        case ASIAN:
-            return clrYellowGreen;
-        default:
-            return clrAliceBlue;
-    }
-}
-//+------------------------------------------------------------------+
-//| ENU KILLZONE TO TEXT                                             |
-//+------------------------------------------------------------------+
-string KillZoneTypeToString(KillZoneTypes killZoneType) {
-    switch(killZoneType) {
-        case LONDON: return "London";
-        case NEW_YORK: return "New York";
-        case ASIAN: return "Asian";
-        default: return "Kill Zone";
-    }
-}
 
 //+------------------------------------------------------------------+
 //| KillZone Type                                                    |
