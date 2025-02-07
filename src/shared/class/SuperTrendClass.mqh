@@ -66,14 +66,12 @@ private:
         superTrend.lowerBand = highLow - (factor * atrValue);
 
         if (currentSuperTrend == 0.0) {
-            Print("INIT IF");
             // Initialize currentSuperTrend based on the first candle's data
             currentSuperTrend = highLow;
             currentDirection = 1; // Default to an uptrend
         }
 
         if (superTrend.close > currentSuperTrend) {
-            Print("IF");
             superTrend.direction = 1; // Uptrend
             superTrend.superTrend = MathMin(currentSuperTrend, superTrend.lowerBand);
             currentSuperTrend = superTrend.superTrend;
@@ -83,7 +81,6 @@ private:
             superTrend.superTrend = MathMax(currentSuperTrend, superTrend.upperBand);
             currentSuperTrend = superTrend.superTrend;
             currentDirection = superTrend.direction;
-            Print("ELSE IF: ", " st: ", superTrend.superTrend, " current st: ", currentSuperTrend);
         }
 
         return superTrend;

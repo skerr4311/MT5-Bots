@@ -1,34 +1,18 @@
 //+------------------------------------------------------------------+
-//|                                                        P.A.M.mq5 |
-//|                                    Copyright 2023, SDK Bots Ltd. |
-//|                                             https://www.mql5.com |
+//| PositionClass.mqh                                                |
+//| Manages open positions and trade execution                       |
 //+------------------------------------------------------------------+
 
-//+------------------------------------------------------------------+
-//| Include                                                          |
-//+------------------------------------------------------------------+
-#include "tFunctions.mqh"
-#include "iDraw.mqh"
+#ifndef POSITION_CLASS_MQH
+#define POSITION_CLASS_MQH
 
-//+------------------------------------------------------------------+
-//| PositionClass                                                    |
-//+------------------------------------------------------------------+
+#include "../types/PositionEnums.mqh"
+#include "../global/account.mqh"
+
 class PositionClass {
 private:
-   struct Position {
-        ulong ticket;
-        string symbol;
-        double volume;
-        double openPrice;
-        double stopLoss;
-        double takeProfitOne;
-        double takeProfitTwo;
-        double takeProfitThree;
-        double takeProfitJump;
-        string type;
-   };
    Position positions[];
-    
+
 public:
     // Constructor
         PositionClass() {
@@ -246,5 +230,6 @@ public:
 
         return false;
     }
-    
 };
+
+#endif // POSITION_CLASS_MQH
