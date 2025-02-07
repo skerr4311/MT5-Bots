@@ -7,9 +7,8 @@
 //+------------------------------------------------------------------+
 //| Include                                                           |
 //+------------------------------------------------------------------+
-#include "../shared/function/iFunctions.mqh"
-#include "CommonGlobals.mqh"
-#include "../shared/function/iDraw.mqh"
+#include "../function/iFunctions.mqh"
+#include "../function/iDraw.mqh"
 
 class KillZone {
   private:

@@ -9,7 +9,7 @@
 //+------------------------------------------------------------------+
 #include "TrendClass.mqh"
 #include "tFunctions.mqh"
-#include "KillZoneClass.mqh"
+#include "../shared/class/KillZoneClass.mqh"
 #include "../shared/function/iFunctions.mqh"
 #include "CommonGlobals.mqh"
 #include "PositionClass.mqh"
