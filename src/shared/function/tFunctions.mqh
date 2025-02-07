@@ -8,6 +8,7 @@
 //| Include                                                          |
 //+------------------------------------------------------------------+
 #include <Trade/Trade.mqh>
+#include "../types/pipEnums.mqh"
 CTrade trade;
 
 // Open a market Buy order

@@ -5,14 +5,13 @@
 //+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
-//| Inclue                                                           |
+//| Include                                                          |
 //+------------------------------------------------------------------+
-#include "../shared/function/iFunctions.mqh"
-#include "../shared/class/ZoneClass.mqh"
-#include "../shared/class/ArrowClass.mqh"
-#include "CommonGlobals.mqh"
-#include "../shared/class/HighsAndLowsClass.mqh"
-#include "../shared/function/iDraw.mqh"
+#include "../function/iFunctions.mqh"
+#include "../class/ZoneClass.mqh"
+#include "../class/ArrowClass.mqh"
+#include "../class/HighsAndLowsClass.mqh"
+#include "../function/iDraw.mqh"
 
 //+------------------------------------------------------------------+
 //| Trend Class                                                      |
