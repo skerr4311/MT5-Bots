@@ -16,7 +16,7 @@ Using the H1 Supply / Demand Zones
     sl: set to the low / high of the current order block + a buffer
 
     while: entered:
-        do: trailstop loss - move sl to the low of every BOS + a buffer
+        do: trailstop loss - move sl to the low of every BOS + a buffer (pips)
 ```
 
 ---
