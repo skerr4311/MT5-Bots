@@ -8,7 +8,7 @@
 //| Include                                                          |
 //+------------------------------------------------------------------+
 #include "TrendClass.mqh"
-#include "tFunctions.mqh"
+#include "../shared/function/tFunctions.mqh"
 #include "../shared/class/KillZoneClass.mqh"
 #include "../shared/function/iFunctions.mqh"
 #include "CommonGlobals.mqh"
