@@ -15,6 +15,19 @@ enum PositionTypes {
    BUY_LIMIT
 };
 
+struct Position {
+    ulong ticket;
+    string symbol;
+    double volume;
+    double openPrice;
+    double stopLoss;
+    double takeProfitOne;
+    double takeProfitTwo;
+    double takeProfitThree;
+    double takeProfitJump;
+    string type;
+};
+
 string PositionToString(PositionTypes position) {
     switch(position) {
         case SELL_NOW: return "Sell Now";

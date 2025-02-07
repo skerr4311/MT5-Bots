@@ -13,7 +13,7 @@
 #include "../shared/function/tFunctions.mqh"
 #include "../shared/function/iFunctions.mqh"
 
-#include "PositionClass.mqh"
+#include "../shared/class/PositionClass.mqh"
 
 //+------------------------------------------------------------------+
 //|                                                                  |
