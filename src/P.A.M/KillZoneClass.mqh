@@ -15,7 +15,7 @@ class KillZone {
   private:
    ENUM_TIMEFRAMES TimeFrame;
    string boxNamePrefix, buttonPrefix;
-   bool isInKillZone, isDrawingStarted, isKillZoneVisible;
+   bool isInKillZone, isDrawingStarted, isKillZoneVisible, isInit;
    string kzStart;
    string kzEnd;
    KillZoneTypes killZoneType;
@@ -68,6 +68,10 @@ class KillZone {
          DrawKillZone(killZones[lastIndex]);
       }
    }
+
+   bool isValidTime(string start, string end) {
+      return ValidateTimeFormat(start) && ValidateTimeFormat(end);
+   }
     
   public:
     // Constructor
@@ -84,7 +88,12 @@ class KillZone {
       killZoneType = killZone;
       killZoneCount = 0;
       isKillZoneVisible = true;
+      isInit = isValidTime(start, end);
       DrawToggleButton();
+    }
+
+    bool getIsInit() {
+      return this.isInit;
     }
 
    //+------------------------------------------------------------------+

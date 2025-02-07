@@ -65,27 +65,6 @@ CandleInfo getCandleInfo(ENUM_TIMEFRAMES timeframe, int candleId) {
    return info;
 }
 
-//+------------------------------------------------------------------+
-//| isLondonInitiated                                                |
-//+------------------------------------------------------------------+
-bool isLondonInitiated() {
-   return londonKzStart != "00:00" && londonKzEnd != "00:00";
-}
-
-//+------------------------------------------------------------------+
-//| isNewYorkInitiated                                               |
-//+------------------------------------------------------------------+
-bool isNewYorkInitiated() {
-   return NewYorkKzStart != "00:00" && NewYorkKzEnd != "00:00";
-}
-
-//+------------------------------------------------------------------+
-//| isAsiaInitiated                                                  |
-//+------------------------------------------------------------------+
-bool isAsiaInitiated() {
-   return AsianKzStart != "00:00" && AsianKzEnd != "00:00";
-}
-
 // Function to get the lowest price from a given start time within a specific timeframe
 HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime startTime, int index) {
     // Find the bar index for the given start time
@@ -109,4 +88,30 @@ HighLowTimeframe GetLowestPriceFromStartTime(ENUM_TIMEFRAMES timeframe, datetime
     }
     
     return response;
+}
+
+//+------------------------------------------------------------------+
+//| Validates time format "[number][number]:[number][number]"        |
+//+------------------------------------------------------------------+ 
+bool ValidateTimeFormat(string inputTime) {
+    // Check if the input string length is exactly 5 characters (HH:MM)
+    if(StringLen(inputTime) != 5) return false;
+    
+    // Check if the colon is in the correct position
+    if(StringGetCharacter(inputTime, 2) != ':') return false;
+    
+    // Extract hours and minutes as strings
+    string strHour = StringSubstr(inputTime, 0, 2);
+    string strMinute = StringSubstr(inputTime, 3, 2);
+    
+    // Convert strings to numbers
+    int hour = StringToInteger(strHour);
+    int minute = StringToInteger(strMinute);
+    
+    // Validate hour and minute ranges
+    if(hour < 0 || hour > 23) return false;
+    if(minute < 0 || minute > 59) return false;
+    
+    // If all checks pass, the format is valid
+    return true;
 }

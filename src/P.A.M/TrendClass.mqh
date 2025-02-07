@@ -8,7 +8,7 @@
 //| Inclue                                                           |
 //+------------------------------------------------------------------+
 #include "../shared/function/iFunctions.mqh"
-#include "ZoneClass.mqh"
+#include "../shared/class/ZoneClass.mqh"
 #include "../shared/class/ArrowClass.mqh"
 #include "CommonGlobals.mqh"
 #include "HighsAndLowsClass.mqh"

@@ -61,18 +61,19 @@ class TradeHandler
          //| init Kill Zones                                                  |
          //+------------------------------------------------------------------+
          void initKillZones() {
-            if(isLondonInitiated()) {
-               londonKZ.init(inputExecutionTimeframe, LONDON, londonKzStart, londonKzEnd);
+            londonKZ.init(inputExecutionTimeframe, LONDON, londonKzStart, londonKzEnd);
+            newYorkKZ.init(inputExecutionTimeframe, NEW_YORK, NewYorkKzStart, NewYorkKzEnd);
+            asianKZ.init(inputExecutionTimeframe, ASIAN, AsianKzStart, AsianKzEnd);
+            
+            if(londonKZ.getIsInit()) {
                londonKZ.SetInitialMarketTrend();
             }
             
-            if(isNewYorkInitiated()) {
-               newYorkKZ.init(inputExecutionTimeframe, NEW_YORK, NewYorkKzStart, NewYorkKzEnd);
+            if(newYorkKZ.getIsInit()) {
                newYorkKZ.SetInitialMarketTrend();
             }
             
-            if(isAsiaInitiated()) {
-               asianKZ.init(inputExecutionTimeframe, ASIAN, AsianKzStart, AsianKzEnd);
+            if(asianKZ.getIsInit()) {
                asianKZ.SetInitialMarketTrend();
             }
          }
@@ -145,13 +146,13 @@ class TradeHandler
             datetime currentExecTime = getTime(inputExecutionTimeframe, 0);
             if(currentExecTime != oncePerBarKillZone) {
                bool isOneKillZoneActive = false;
-               if(isLondonInitiated() && londonKZ.checkIsInKillZone(0)){
+               if(londonKZ.getIsInit() && londonKZ.checkIsInKillZone(0)){
                   isOneKillZoneActive = true;
-               } else if(isNewYorkInitiated() && newYorkKZ.checkIsInKillZone(0)) {
+               } else if(newYorkKZ.getIsInit() && newYorkKZ.checkIsInKillZone(0)) {
                   isOneKillZoneActive = true;
-               } else if(isAsiaInitiated() && asianKZ.checkIsInKillZone(0)) {
+               } else if(asianKZ.getIsInit() && asianKZ.checkIsInKillZone(0)) {
                   isOneKillZoneActive = true;
-               } else if (!isLondonInitiated() && !isNewYorkInitiated() && !isAsiaInitiated()) {
+               } else if (!londonKZ.getIsInit() && !newYorkKZ.getIsInit() && !asianKZ.getIsInit()) {
                   // if not KZ initiated then trade all time frames
                   isOneKillZoneActive = true;
                }
@@ -167,15 +168,15 @@ class TradeHandler
          void handleChartEvent(const string &sparam) {
              trendClass.handleButtonClick(sparam);
              executionClass.handleButtonClick(sparam);
-             if(isLondonInitiated()) {
+             if(londonKZ.getIsInit()) {
                londonKZ.HandleButtonClick(sparam);
             }
             
-            if(isNewYorkInitiated()) {
+            if(newYorkKZ.getIsInit()) {
                newYorkKZ.HandleButtonClick(sparam);
             }
             
-            if(isAsiaInitiated()) {
+            if(asianKZ.getIsInit()) {
                asianKZ.HandleButtonClick(sparam);
             }
          }
