@@ -11,7 +11,7 @@
 #include "../shared/class/ZoneClass.mqh"
 #include "../shared/class/ArrowClass.mqh"
 #include "CommonGlobals.mqh"
-#include "HighsAndLowsClass.mqh"
+#include "../shared/class/HighsAndLowsClass.mqh"
 #include "../shared/function/iDraw.mqh"
 
 //+------------------------------------------------------------------+

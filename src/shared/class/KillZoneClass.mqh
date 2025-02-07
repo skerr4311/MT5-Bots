@@ -9,6 +9,7 @@
 //+------------------------------------------------------------------+
 #include "../function/iFunctions.mqh"
 #include "../function/iDraw.mqh"
+#include "../global/killZone.mqh"
 
 class KillZone {
   private:
