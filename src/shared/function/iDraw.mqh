@@ -12,6 +12,7 @@
 // Types
 #include "../types/tradeStructs.mqh"
 #include "../types/killZoneStructs.mqh"
+#include "../global/trend.mqh"
 
 //+------------------------------------------------------------------+
 //| Draw Functions                                                   |

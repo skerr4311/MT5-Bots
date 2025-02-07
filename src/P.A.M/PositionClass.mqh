@@ -9,6 +9,9 @@
 //+------------------------------------------------------------------+
 #include "../shared/function/tFunctions.mqh"
 #include "../shared/function/iDraw.mqh"
+#include "../shared/global/account.mqh"
+
+
 
 //+------------------------------------------------------------------+
 //| PositionClass                                                    |
